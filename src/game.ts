@@ -280,7 +280,7 @@ export class Game {
   }
 
   private getShareText(): string {
-    const GAME_URL = 'https://gloomstep-dungeon.example.com';
+    const GAME_URL = 'https://gloomstep.barretblake.dev';
     const s = this.state;
     const stats = s.player.stats!;
     const name = s.player.appearance?.name ?? 'Adventurer';
