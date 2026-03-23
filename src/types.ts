@@ -44,6 +44,10 @@ export interface ItemComponent {
   defenseBonus?: number;
 }
 
+export interface TreasureComponent {
+  value: number;
+}
+
 export type UseEffect =
   | { type: 'heal'; amount: number }
   | { type: 'damage'; amount: number; range: number };
@@ -57,6 +61,7 @@ export interface Entity {
   inventory?: InventoryComponent;
   equipment?: EquipmentComponent;
   item?: ItemComponent;
+  treasure?: TreasureComponent;
   player?: true;
   blocksMovement?: true;
   xpValue?: number;
@@ -81,6 +86,7 @@ export type Action =
   | { type: 'wait' }
   | { type: 'pickup' }
   | { type: 'useItem'; index: number }
+  | { type: 'dropItem'; index: number }
   | { type: 'descend' }
   | { type: 'toggleInventory' };
 
@@ -92,6 +98,7 @@ export interface GameState {
   player: Entity;
   depth: number;
   score: number;
+  treasureCollected: number;
   turn: number;
   gameOver: boolean;
   messages: string[];

@@ -65,6 +65,8 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
   ctx.fillText(`DEF: ${stats.defense}${equip?.armor?.item?.defenseBonus ? '+' + equip.armor.item.defenseBonus : ''}`, statsX + 100, barY + 24);
   ctx.fillText(`Score: ${state.score}`, statsX + 200, barY + 8);
   ctx.fillText(`Turn: ${state.turn}`, statsX + 200, barY + 24);
+  ctx.fillStyle = '#ffd700';
+  ctx.fillText(`Gold: ${state.treasureCollected}`, statsX + 300, barY + 8);
 
   // Message log
   const msgX = PADDING;
@@ -210,7 +212,7 @@ export function drawInventoryScreen(ctx: CanvasRenderingContext2D, state: GameSt
   ctx.fillStyle = COLORS.textDim;
   ctx.font = '12px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('[1-9] Use item  |  [Esc/i] Close', CANVAS_W / 2, y);
+  ctx.fillText('[1-9] Use item  |  [Shift+1-9] Drop item  |  [Esc/i] Close', CANVAS_W / 2, y);
 }
 
 export function drawCharSelect(
@@ -333,21 +335,23 @@ export function drawGameOver(
   ctx.fillText(`Score: ${state.score}`, CANVAS_W / 2, CANVAS_H / 2 - 10);
   ctx.fillText(`Depth Reached: ${state.depth}`, CANVAS_W / 2, CANVAS_H / 2 + 20);
   ctx.fillText(`Turns Survived: ${state.turn}`, CANVAS_W / 2, CANVAS_H / 2 + 50);
+  ctx.fillStyle = '#ffd700';
+  ctx.fillText(`Gold Collected: ${state.treasureCollected}`, CANVAS_W / 2, CANVAS_H / 2 + 80);
 
   // High scores
   if (state.highScores.length > 0) {
     ctx.fillStyle = COLORS.stairs;
     ctx.font = 'bold 16px monospace';
-    ctx.fillText('HIGH SCORES', CANVAS_W / 2, CANVAS_H / 2 + 100);
+    ctx.fillText('HIGH SCORES', CANVAS_W / 2, CANVAS_H / 2 + 120);
     ctx.font = '14px monospace';
     ctx.fillStyle = COLORS.text;
     state.highScores.slice(0, 5).forEach((score, i) => {
-      ctx.fillText(`${i + 1}. ${score}`, CANVAS_W / 2, CANVAS_H / 2 + 125 + i * 20);
+      ctx.fillText(`${i + 1}. ${score}`, CANVAS_W / 2, CANVAS_H / 2 + 145 + i * 20);
     });
   }
 
   // Share options
-  const shareY = CANVAS_H / 2 + 235;
+  const shareY = CANVAS_H / 2 + 255;
   ctx.fillStyle = COLORS.stairs;
   ctx.font = 'bold 14px monospace';
   ctx.fillText('SHARE YOUR RESULT', CANVAS_W / 2, shareY);

@@ -12,6 +12,7 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 - **45+ items** — Swords, axes, hammers, bows, armor, shields, helmets, potions, and scrolls
 - **Turn-based combat** — Every move counts; plan your approach carefully
 - **Equipment system** — Equip weapons and armor to boost your stats
+- **Treasure** — Gold scattered through every level and dropped by slain monsters; collected automatically as you walk over it
 - **Field of view** — Explore using recursive shadowcasting; what lurks in the dark?
 - **Permadeath** — One life per run. High scores are saved locally
 - **Share your runs** — Post your results to Mastodon, Bluesky, or copy to clipboard
@@ -24,10 +25,11 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 |-----|--------|
 | WASD / Arrow Keys | Move |
 | G | Pick up item |
-| I | Open inventory |
+| I | Open / close inventory |
 | > | Descend stairs |
 | . | Wait a turn |
-| 1-9 | Use inventory item (when inventory is open) |
+| 1-9 | Use inventory item (inventory open) |
+| Shift+1-9 | Drop inventory item (inventory open) |
 | Esc | Close inventory |
 
 ### Tips
@@ -35,9 +37,12 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 - Bump into a monster to attack it
 - Pick up weapons and armor, then open inventory and press their number to equip them
 - Potions are consumed immediately when used; weapons and armor are equipped
-- Find the stairs down (>) to descend to the next depth
-- Deeper floors have tougher monsters but better loot
+- Walk over gold (`$`) to collect it automatically — it adds to your score
+- Monsters have a chance to drop gold when slain; deeper monsters drop more
+- Find the stairs down (`>`) to descend to the next depth
+- Deeper floors have tougher monsters but better loot and more valuable treasure
 - Check your inventory to see how equipment affects your ATK and DEF stats
+- Drop unwanted items with Shift+number to free up inventory space
 
 ## Development
 
