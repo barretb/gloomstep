@@ -118,6 +118,19 @@ function equipWeapon(state: GameState, item: Entity, invIndex: number): void {
   state.messages.push(`Equipped ${item.appearance?.name ?? 'weapon'}.`);
 }
 
+export function dropItem(state: GameState, index: number): void {
+  const inv = state.player.inventory;
+  if (!inv || index < 0 || index >= inv.items.length) return;
+
+  const item = inv.items[index];
+  const pos = state.player.position!;
+
+  inv.items.splice(index, 1);
+  item.position = { x: pos.x, y: pos.y };
+  state.entities.push(item);
+  state.messages.push(`Dropped ${item.appearance?.name ?? 'item'}.`);
+}
+
 function equipArmor(state: GameState, item: Entity, invIndex: number): void {
   const equip = state.player.equipment!;
   const inv = state.player.inventory!;

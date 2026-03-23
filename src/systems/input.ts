@@ -23,6 +23,11 @@ function keyToAction(key: string, mode: UIMode): Action | null {
     if (num >= 1 && num <= 9) {
       return { type: 'useItem', index: num - 1 };
     }
+    const dropKeys = '!@#$%^&*(';
+    const dropIndex = dropKeys.indexOf(key);
+    if (dropIndex >= 0) {
+      return { type: 'dropItem', index: dropIndex };
+    }
     return null;
   }
 

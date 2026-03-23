@@ -5,7 +5,7 @@ import { populateDungeon } from './dungeon/populate';
 import { moveEntity } from './systems/movement';
 import { runAI } from './systems/ai';
 import { computeFOV } from './systems/fov';
-import { pickupItem, useItem } from './systems/inventory';
+import { pickupItem, useItem, dropItem } from './systems/inventory';
 import { loadHighScores, saveHighScore } from './systems/scoring';
 import { render } from './render/renderer';
 import { SpriteMap } from './render/sprite-loader';
@@ -46,6 +46,7 @@ export class Game {
       player,
       depth: 1,
       score: 0,
+      treasureCollected: 0,
       turn: 0,
       gameOver: false,
       messages: [],
@@ -113,6 +114,7 @@ export class Game {
       player,
       depth,
       score: 0,
+      treasureCollected: 0,
       turn: 0,
       gameOver: false,
       messages: [`${template.name} enters the dungeon...`],
@@ -137,6 +139,13 @@ export class Game {
 
     if (action.type === 'useItem') {
       useItem(this.state, action.index);
+      this.state.uiMode = 'game';
+      this.endTurn();
+      return;
+    }
+
+    if (action.type === 'dropItem') {
+      dropItem(this.state, action.index);
       this.state.uiMode = 'game';
       this.endTurn();
       return;

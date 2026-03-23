@@ -25,6 +25,7 @@ export function populateDungeon(state: GameState, rooms: Room[]): void {
   const depth = state.depth;
   const monsterCount = 3 + depth * 2;
   const itemCount = 2 + Math.floor(depth / 2);
+  const treasureCount = 2 + Math.floor(depth / 2);
 
   // Skip first room (player spawn)
   const spawnRooms = rooms.slice(1);
@@ -61,5 +62,20 @@ export function populateDungeon(state: GameState, rooms: Room[]): void {
       item: { ...template.item },
     });
     state.entities.push(item);
+  }
+
+  // Spawn static treasure
+  for (let i = 0; i < treasureCount; i++) {
+    const room = spawnRooms[rand(0, spawnRooms.length - 1)];
+    const pos = randomFloorInRoom(state, room);
+    if (!pos) continue;
+
+    const value = rand(depth * 3, depth * 12);
+    const treasure = createEntity({
+      position: { x: pos.x, y: pos.y },
+      appearance: { name: 'Gold', char: '$', color: '#ffd700', sprite: 'treasure' },
+      treasure: { value },
+    });
+    state.entities.push(treasure);
   }
 }

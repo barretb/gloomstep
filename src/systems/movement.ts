@@ -38,5 +38,21 @@ export function moveEntity(
   // Move
   entity.position.x = newX;
   entity.position.y = newY;
+
+  // Auto-collect treasure on the new tile
+  if (entity.player) {
+    const treasureIdx = state.entities.findIndex(
+      (e) => e.treasure && e.position && e.position.x === newX && e.position.y === newY
+    );
+    if (treasureIdx >= 0) {
+      const t = state.entities[treasureIdx];
+      const value = t.treasure!.value;
+      state.treasureCollected += value;
+      state.score += value;
+      state.entities.splice(treasureIdx, 1);
+      state.messages.push(`You found ${value} gold!`);
+    }
+  }
+
   return true;
 }

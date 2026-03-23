@@ -1,4 +1,5 @@
 import { Entity, GameState } from '../types';
+import { createEntity } from '../ecs/entity';
 
 function getAttackPower(entity: Entity): number {
   let atk = entity.stats?.attack ?? 0;
@@ -53,6 +54,17 @@ function killEntity(state: GameState, victim: Entity, killer: Entity): void {
     killer.stats.xp += victim.xpValue;
     state.score += victim.xpValue;
     checkLevelUp(state, killer);
+  }
+
+  // Chance to drop treasure
+  if (victim.position && victim.xpValue && Math.random() < 0.4) {
+    const value = Math.max(1, Math.ceil(victim.xpValue / 3) + Math.floor(Math.random() * victim.xpValue / 3));
+    const drop = createEntity({
+      position: { x: victim.position.x, y: victim.position.y },
+      appearance: { name: 'Gold', char: '$', color: '#ffd700', sprite: 'treasure' },
+      treasure: { value },
+    });
+    state.entities.push(drop);
   }
 
   // Remove from entities
