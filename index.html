@@ -34,6 +34,19 @@
         font-size: 11px;
         text-align: center;
       }
+      .links {
+        color: #4a4a6a;
+        font-size: 11px;
+        text-align: center;
+      }
+      .links a {
+        color: #6a6aaa;
+        text-decoration: none;
+      }
+      .links a:hover {
+        color: #9999cc;
+        text-decoration: underline;
+      }
     </style>
   </head>
   <body>
@@ -42,6 +55,11 @@
       <canvas id="game"></canvas>
       <div class="controls">
         WASD/Arrows: Move | G: Pickup | I: Inventory | >: Descend | .: Wait
+      </div>
+      <div class="links">
+        <a href="https://barretblake.dev" target="_blank" rel="noopener">barretblake.dev</a>
+        &nbsp;|&nbsp;
+        <a href="https://github.com/barretb/gloomstep" target="_blank" rel="noopener">GitHub</a>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
