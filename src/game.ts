@@ -137,23 +137,27 @@ export class Game {
       return;
     }
 
-    if (action.type === 'useItem') {
-      useItem(this.state, action.index);
-      this.state.uiMode = 'game';
-      this.endTurn();
-      return;
-    }
-
-    if (action.type === 'dropItem') {
-      dropItem(this.state, action.index);
-      this.state.uiMode = 'game';
-      this.endTurn();
+    // Inventory actions only consume a turn (and close the inventory)
+    // when they actually did something.
+    if (action.type === 'useItem' || action.type === 'dropItem') {
+      const acted = action.type === 'useItem'
+        ? useItem(this.state, action.index)
+        : dropItem(this.state, action.index);
+      if (acted) {
+        this.state.uiMode = 'game';
+        this.endTurn();
+      } else {
+        this.draw();
+      }
       return;
     }
 
     if (action.type === 'pickup') {
-      pickupItem(this.state);
-      this.endTurn();
+      if (pickupItem(this.state)) {
+        this.endTurn();
+      } else {
+        this.draw();
+      }
       return;
     }
 

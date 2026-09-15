@@ -28,8 +28,8 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 | I | Open / close inventory |
 | > | Descend stairs |
 | . | Wait a turn |
-| 1-9 | Use inventory item (inventory open) |
-| Shift+1-9 | Drop inventory item (inventory open) |
+| 1-9, 0 | Use inventory item 1-10 (inventory open) |
+| Shift+1-9, Shift+0 | Drop inventory item 1-10 (inventory open) |
 | Esc | Close inventory |
 
 ### Tips
@@ -43,12 +43,14 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 - Deeper floors have tougher monsters but better loot and more valuable treasure
 - Check your inventory to see how equipment affects your ATK and DEF stats
 - Drop unwanted items with Shift+number to free up inventory space
+- Actions that do nothing (picking up from an empty tile, using an empty slot) do not cost a turn
+- Monsters never fight each other; only you can be attacked
 
 ## Development
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20.19+ (or 22.12+), as required by Vite 8
 
 ### Setup
 
@@ -59,11 +61,20 @@ npm run dev
 
 The game runs at `http://localhost:5173`.
 
+### Testing
+
+```bash
+npm test
+```
+
+Unit tests live in `tests/` and run with [Vitest](https://vitest.dev). They cover the pure game systems (movement, combat, inventory, input mapping) and the renderer's entity pass, using a recording stand-in for the canvas context so no browser is needed.
+
 ### Tech Stack
 
 - TypeScript
 - HTML5 Canvas (no game framework)
 - Vite
+- Vitest (unit tests)
 
 ### Project Structure
 
@@ -80,4 +91,5 @@ src/
   main.ts       Entry point
 public/
   sprites/      Character, monster, and item sprite images (32x32 PNG)
+tests/          Vitest unit tests and shared test helpers
 ```

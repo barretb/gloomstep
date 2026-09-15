@@ -212,7 +212,7 @@ export function drawInventoryScreen(ctx: CanvasRenderingContext2D, state: GameSt
   ctx.fillStyle = COLORS.textDim;
   ctx.font = '12px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('[1-9] Use item  |  [Shift+1-9] Drop item  |  [Esc/i] Close', CANVAS_W / 2, y);
+  ctx.fillText('[1-9, 0] Use item  |  [Shift+1-9, 0] Drop item  |  [Esc/i] Close', CANVAS_W / 2, y);
 }
 
 export function drawCharSelect(
