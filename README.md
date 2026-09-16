@@ -17,6 +17,7 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 - **Field of view** — Explore using recursive shadowcasting; what lurks in the dark?
 - **Permadeath** — One life per run. High scores are saved locally
 - **Save & resume** — Your run autosaves every turn; press C on the hero screen to pick up where you left off
+- **Touch controls** — Play on a phone or tablet with an on-screen d-pad and tappable menus
 - **Share your runs** — Post your results to Mastodon, Bluesky, or copy to clipboard
 
 ## How to Play
@@ -51,6 +52,12 @@ Each class has one ability. Press **Q** to use it; the HUD shows when it is read
 | Healer | Mend | Heal 30% of max HP | 12 turns |
 
 Abilities that find no target (Cleave with nothing adjacent, Arcane Bolt with nothing in sight, Mend at full health) do not fire and do not cost a turn. Using Rage or Guard Stance again while active refreshes the duration rather than stacking.
+
+### Touch Controls
+
+On touch devices an on-screen d-pad (with wait in the centre) and Grab, Bag, Skill, and Descend buttons appear under the map. Every other screen is tappable too: tap a hero card and then **START** on the hero screen (or the Continue banner to resume), tap an inventory row to use it or its `[drop]` label to drop it, tap the close mark or outside the panel to close the inventory, and tap the share options or "play again" on the game over screen.
+
+The canvas scales to fit the screen width. On a portrait phone the map is playable but the HUD text is small; a compact layout for narrow screens is planned.
 
 ### Tips
 
@@ -109,6 +116,7 @@ src/
   ecs/          Entity factory
   render/       Canvas rendering, sprites, HUD, camera
   systems/      Input, movement, combat, damage, AI, FOV, inventory, equipment, abilities, targeting, persistence, scoring
+  ui/           Tap regions for canvas screens and the touch control bar
   constants.ts  Game configuration
   types.ts      Core type definitions
   game.ts       Main game orchestrator

@@ -19,6 +19,8 @@
         flex-direction: column;
         align-items: center;
         gap: 8px;
+        width: 100%;
+        max-width: 804px;
       }
       h1 {
         color: #ffcc00;
@@ -28,6 +30,8 @@
       canvas {
         border: 2px solid #4a4a6a;
         image-rendering: pixelated;
+        max-width: 100%;
+        height: auto;
       }
       .controls {
         color: #666;
@@ -47,12 +51,79 @@
         color: #9999cc;
         text-decoration: underline;
       }
+      #touch-controls {
+        display: none;
+        width: 100%;
+        max-width: 800px;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 8px 4px;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      #touch-controls button {
+        min-width: 56px;
+        min-height: 56px;
+        font: bold 18px monospace;
+        color: #ffcc00;
+        background: #1a1a2e;
+        border: 2px solid #4a4a6a;
+        border-radius: 8px;
+        touch-action: manipulation;
+      }
+      #touch-controls button:active {
+        background: #4a4a6a;
+      }
+      #touch-controls .dpad {
+        display: grid;
+        grid-template-columns: repeat(3, 56px);
+        grid-template-rows: repeat(3, 56px);
+        gap: 4px;
+      }
+      #touch-controls .dpad button:nth-child(1) { grid-column: 2; grid-row: 1; }
+      #touch-controls .dpad button:nth-child(2) { grid-column: 1; grid-row: 2; }
+      #touch-controls .dpad button:nth-child(3) { grid-column: 2; grid-row: 2; }
+      #touch-controls .dpad button:nth-child(4) { grid-column: 3; grid-row: 2; }
+      #touch-controls .dpad button:nth-child(5) { grid-column: 2; grid-row: 3; }
+      #touch-controls .actions {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+      }
+      #touch-controls .actions button {
+        min-width: 84px;
+        font-size: 14px;
+      }
+      @media (pointer: coarse) {
+        #touch-controls:not([hidden]) { display: flex; }
+        .controls { display: none; }
+      }
+      @media (max-width: 840px) {
+        body { align-items: flex-start; padding: 8px; }
+      }
     </style>
   </head>
   <body>
     <div id="game-container">
       <h1>GLOOMSTEP DUNGEON</h1>
       <canvas id="game"></canvas>
+      <div id="touch-controls" hidden>
+        <div class="dpad">
+          <button data-action="move:0,-1" aria-label="Move up">&#9650;</button>
+          <button data-action="move:-1,0" aria-label="Move left">&#9664;</button>
+          <button data-action="wait" aria-label="Wait a turn">&#9679;</button>
+          <button data-action="move:1,0" aria-label="Move right">&#9654;</button>
+          <button data-action="move:0,1" aria-label="Move down">&#9660;</button>
+        </div>
+        <div class="actions">
+          <button data-action="pickup">Grab</button>
+          <button data-action="toggleInventory">Bag</button>
+          <button data-action="ability">Skill</button>
+          <button data-action="descend">Descend</button>
+        </div>
+      </div>
       <div class="controls">
         WASD/Arrows: Move | G: Pickup | I: Inventory | Q: Ability | >: Descend | .: Wait
       </div>
