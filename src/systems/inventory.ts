@@ -1,5 +1,6 @@
 import { Entity, GameState } from '../types';
 import { killEntity } from './combat';
+import { findNearestVisibleMonster } from './targeting';
 
 /** Returns true if an item was picked up (i.e. the action consumed a turn). */
 export function pickupItem(state: GameState): boolean {
@@ -88,21 +89,7 @@ function applyEffect(state: GameState, item: Entity): void {
       break;
     }
     case 'damage': {
-      // Damage nearest visible enemy in range
-      const pos = state.player.position!;
-      let nearest: Entity | null = null;
-      let nearestDist = Infinity;
-
-      for (const e of state.entities) {
-        if (!e.ai || !e.position || !e.stats || e.stats.hp <= 0) continue;
-        if (!state.dungeon.visible[e.position.y]?.[e.position.x]) continue;
-
-        const dist = Math.abs(e.position.x - pos.x) + Math.abs(e.position.y - pos.y);
-        if (dist <= effect.range && dist < nearestDist) {
-          nearest = e;
-          nearestDist = dist;
-        }
-      }
+      const nearest = findNearestVisibleMonster(state, effect.range);
 
       if (nearest && nearest.stats) {
         nearest.stats.hp -= effect.amount;

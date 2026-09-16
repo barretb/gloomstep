@@ -1,4 +1,4 @@
-import { DungeonLevel, Entity, EquipSlot, GameState, Stats, Tile } from '../src/types';
+import { AbilityId, DungeonLevel, Entity, EquipSlot, GameState, Stats, Tile } from '../src/types';
 import { createEntity, resetEntityIds } from '../src/ecs/entity';
 import { createEmptyEquipment } from '../src/systems/equipment';
 
@@ -98,6 +98,12 @@ export function makeCtx(): { ctx: CanvasRenderingContext2D; calls: CtxCall[] } {
     },
   }) as unknown as CanvasRenderingContext2D;
   return { ctx, calls };
+}
+
+/** Gives the player a ready-to-use ability and an empty status list. */
+export function giveAbility(player: Entity, id: AbilityId): void {
+  player.ability = { id, cooldownRemaining: 0 };
+  player.statusEffects = [];
 }
 
 export { resetEntityIds };
