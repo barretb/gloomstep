@@ -1,4 +1,4 @@
-import { CANVAS_W, CANVAS_H, COLORS, TILE_SIZE, MAX_MESSAGES } from '../constants';
+import { COLORS, TILE_SIZE } from '../constants';
 import { GameState } from '../types';
 import { CHARACTERS } from '../data/characters';
 import { SpriteMap } from './sprite-loader';
@@ -6,22 +6,24 @@ import { EQUIP_SLOTS, getAttackBonus, getDefenseBonus } from '../systems/equipme
 import { ABILITIES } from '../data/abilities';
 import { SaveSummary } from '../systems/persistence';
 import { HitRegion } from '../ui/hit-regions';
+import { canvasHeightFor, getLayout } from './layout';
 
-const HUD_HEIGHT = 120;
-const HUD_Y = CANVAS_H;
 const PADDING = 10;
 
 export function getHudHeight(): number {
-  return HUD_HEIGHT;
+  return getLayout().hudH;
 }
 
 export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
+  const L = getLayout();
+  const hudY = L.mapH;
+
   // HUD background
   ctx.fillStyle = '#111122';
-  ctx.fillRect(0, HUD_Y, CANVAS_W, HUD_HEIGHT);
+  ctx.fillRect(0, hudY, L.mapW, L.hudH);
   ctx.strokeStyle = COLORS.inventoryBorder;
   ctx.lineWidth = 1;
-  ctx.strokeRect(0, HUD_Y, CANVAS_W, HUD_HEIGHT);
+  ctx.strokeRect(0, hudY, L.mapW, L.hudH);
 
   const stats = state.player.stats!;
   const atkBonus = getAttackBonus(state.player);
@@ -29,8 +31,8 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
 
   // HP bar
   const barX = PADDING;
-  const barY = HUD_Y + PADDING;
-  const barW = 200;
+  const barY = hudY + PADDING;
+  const barW = L.compact ? 150 : 200;
   const barH = 16;
   const hpRatio = stats.hp / stats.maxHp;
 
@@ -61,19 +63,23 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
   ctx.fillStyle = COLORS.textBright;
   ctx.fillText(`XP: ${stats.xp}/${stats.xpToNext}`, barX + 4, xpBarY + barH / 2);
 
-  // Stats text
+  // Stats text: two rows of three columns to the right of the bars
   const statsX = barX + barW + 20;
+  const col = L.compact ? 95 : 100;
   ctx.fillStyle = COLORS.text;
   ctx.fillText(`Depth: ${state.depth}`, statsX, barY + 8);
   ctx.fillText(`Level: ${stats.level}`, statsX, barY + 24);
-  ctx.fillText(`ATK: ${stats.attack}${atkBonus ? '+' + atkBonus : ''}`, statsX + 100, barY + 8);
-  ctx.fillText(`DEF: ${stats.defense}${defBonus ? '+' + defBonus : ''}`, statsX + 100, barY + 24);
-  ctx.fillText(`Score: ${state.score}`, statsX + 200, barY + 8);
-  ctx.fillText(`Turn: ${state.turn}`, statsX + 200, barY + 24);
-  ctx.fillStyle = '#ffd700';
-  ctx.fillText(`Gold: ${state.treasureCollected}`, statsX + 300, barY + 8);
+  ctx.fillText(`ATK: ${stats.attack}${atkBonus ? '+' + atkBonus : ''}`, statsX + col, barY + 8);
+  ctx.fillText(`DEF: ${stats.defense}${defBonus ? '+' + defBonus : ''}`, statsX + col, barY + 24);
+  ctx.fillText(`Score: ${state.score}`, statsX + 2 * col, barY + 8);
+  ctx.fillText(`Turn: ${state.turn}`, statsX + 2 * col, barY + 24);
 
-  // Ability status and active effects, e.g. "[Q] Rage: READY  RAGE 4"
+  // Gold and ability: a fourth column on desktop, a third row under the bars on compact
+  const goldPos = L.compact ? { x: barX, y: barY + 40 } : { x: statsX + 300, y: barY + 8 };
+  const abilityPos = L.compact ? { x: barX + 120, y: barY + 40 } : { x: statsX + 300, y: barY + 24 };
+  ctx.fillStyle = '#ffd700';
+  ctx.fillText(`Gold: ${state.treasureCollected}`, goldPos.x, goldPos.y);
+
   const ability = state.player.ability;
   if (ability) {
     const def = ABILITIES[ability.id];
@@ -85,23 +91,24 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
     );
     const status = ready ? 'READY' : `${ability.cooldownRemaining} turns`;
     ctx.fillStyle = ready ? COLORS.textBright : COLORS.textDim;
-    ctx.fillText(`[Q] ${def.name}: ${status}`, statsX + 300, barY + 24);
+    ctx.fillText(`[Q] ${def.name}: ${status}`, abilityPos.x, abilityPos.y);
     if (effects.length > 0) {
       ctx.fillStyle = '#ff88ff';
       const prefixW = ctx.measureText(`[Q] ${def.name}: ${status}  `).width;
-      ctx.fillText(effects.join('  '), statsX + 300 + prefixW, barY + 24);
+      ctx.fillText(effects.join('  '), abilityPos.x + prefixW, abilityPos.y);
     }
   }
 
   // Message log
   const msgX = PADDING;
-  const msgY = xpBarY + barH + 8;
-  const recentMessages = state.messages.slice(-MAX_MESSAGES);
+  const msgY = L.compact ? barY + 56 : xpBarY + barH + 8;
+  const lineH = L.compact ? 12 : 14;
+  const recentMessages = state.messages.slice(-L.maxMessages);
   ctx.font = '11px monospace';
   recentMessages.forEach((msg, i) => {
     const alpha = 0.5 + 0.5 * ((i + 1) / recentMessages.length);
     ctx.fillStyle = `rgba(200, 200, 200, ${alpha})`;
-    ctx.fillText(msg, msgX, msgY + i * 14);
+    ctx.fillText(msg, msgX, msgY + i * lineH);
   });
 }
 
@@ -110,18 +117,23 @@ export function drawInventoryScreen(ctx: CanvasRenderingContext2D, state: GameSt
   const inv = state.player.inventory;
   if (!inv) return regions;
 
+  const L = getLayout();
+  const H = canvasHeightFor('inventory', L);
+  // On desktop the inventory sits over the map and leaves the HUD visible; compact uses the whole menu canvas.
+  const areaH = L.compact ? H : L.mapH;
+
   // Lowest priority: tapping anywhere outside the panel closes the inventory
-  regions.push({ x: 0, y: 0, w: CANVAS_W, h: CANVAS_H + HUD_HEIGHT, action: { type: 'closeInventory' } });
+  regions.push({ x: 0, y: 0, w: L.mapW, h: H, action: { type: 'closeInventory' } });
 
   // Overlay
   ctx.fillStyle = COLORS.inventoryBg;
-  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  ctx.fillRect(0, 0, L.mapW, areaH);
 
   // Border
-  const panelX = 60;
-  const panelY = 40;
-  const panelW = CANVAS_W - 120;
-  const panelH = CANVAS_H - 80;
+  const panelX = L.compact ? 20 : 60;
+  const panelY = L.compact ? 20 : 40;
+  const panelW = L.mapW - 2 * panelX;
+  const panelH = areaH - 2 * panelY;
   ctx.strokeStyle = COLORS.inventoryBorder;
   ctx.lineWidth = 2;
   ctx.strokeRect(panelX, panelY, panelW, panelH);
@@ -139,20 +151,21 @@ export function drawInventoryScreen(ctx: CanvasRenderingContext2D, state: GameSt
   ctx.fillStyle = COLORS.textBright;
   ctx.font = 'bold 18px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('INVENTORY', CANVAS_W / 2, panelY + 30);
+  ctx.fillText('INVENTORY', L.mapW / 2, panelY + 30);
 
   ctx.textAlign = 'left';
   ctx.font = '14px monospace';
 
   const equip = state.player.equipment;
 
-  // Equipment section: six slots laid out in two columns
+  // Equipment section: two columns on desktop, one on compact
   let y = panelY + 60;
   ctx.fillStyle = COLORS.stairs;
   ctx.fillText('Equipment:', panelX + 20, y);
   y += 22;
-  const slotRows = Math.ceil(EQUIP_SLOTS.length / 2);
-  const slotColW = Math.floor((panelW - 60) / 2);
+  const slotCols = L.compact ? 1 : 2;
+  const slotRows = Math.ceil(EQUIP_SLOTS.length / slotCols);
+  const slotColW = Math.floor((panelW - 60) / slotCols);
   EQUIP_SLOTS.forEach((info, i) => {
     const col = Math.floor(i / slotRows);
     const row = i % slotRows;
@@ -263,7 +276,7 @@ export function drawInventoryScreen(ctx: CanvasRenderingContext2D, state: GameSt
   ctx.fillStyle = COLORS.textDim;
   ctx.font = '12px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('[1-9, 0] or tap: Use  |  [Shift+num] or [drop]: Drop  |  [Esc/i] or ✕: Close', CANVAS_W / 2, y);
+  ctx.fillText('[1-9, 0] or tap: Use  |  [Shift+num] or [drop]: Drop  |  [Esc/i] or ✕: Close', L.mapW / 2, y);
 
   return regions;
 }
@@ -276,25 +289,27 @@ export function drawCharSelect(
   confirmAbandon = false
 ): HitRegion[] {
   const regions: HitRegion[] = [];
-  const totalH = CANVAS_H + getHudHeight();
+  const L = getLayout();
+  const totalH = canvasHeightFor('charselect', L);
 
   // Background
   ctx.fillStyle = COLORS.bg;
-  ctx.fillRect(0, 0, CANVAS_W, totalH);
+  ctx.fillRect(0, 0, L.mapW, totalH);
 
   // Title
   ctx.fillStyle = '#ffcc00';
-  ctx.font = 'bold 28px monospace';
+  ctx.font = L.compact ? 'bold 22px monospace' : 'bold 28px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('CHOOSE YOUR HERO', CANVAS_W / 2, 40);
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('CHOOSE YOUR HERO', L.mapW / 2, L.compact ? 32 : 40);
 
-  // Grid layout
-  const cols = 5;
-  const cellW = 140;
-  const cellH = 120;
+  // Grid layout: 5 columns of 140x120 on desktop, 4 columns of 116x96 on compact
+  const cols = L.compact ? 4 : 5;
+  const cellW = L.compact ? 116 : 140;
+  const cellH = L.compact ? 96 : 120;
   const gridW = cols * cellW;
-  const startX = Math.floor((CANVAS_W - gridW) / 2);
-  const startY = 65;
+  const startX = Math.floor((L.mapW - gridW) / 2);
+  const startY = L.compact ? 55 : 65;
 
   CHARACTERS.forEach((char, i) => {
     const col = i % cols;
@@ -320,10 +335,10 @@ export function drawCharSelect(
       ctx.strokeRect(x + 2, y + 2, cellW - 4, cellH - 4);
     }
 
-    // Character sprite (scaled up 2x for visibility)
-    const spriteSize = TILE_SIZE * 2;
+    // Character sprite (2x on desktop, 1.5x on compact)
+    const spriteSize = L.compact ? Math.floor(TILE_SIZE * 1.5) : TILE_SIZE * 2;
     const spriteX = x + Math.floor((cellW - spriteSize) / 2);
-    const spriteY = y + 8;
+    const spriteY = y + (L.compact ? 6 : 8);
     const img = sprites.get(char.sprite);
     if (img) {
       ctx.imageSmoothingEnabled = false;
@@ -351,6 +366,7 @@ export function drawCharSelect(
   // Selected character details panel
   const selected = CHARACTERS[selectedIndex];
   const detailY = startY + Math.ceil(CHARACTERS.length / cols) * cellH + 10;
+  const cx = L.mapW / 2;
 
   ctx.fillStyle = 'rgba(40, 40, 60, 0.7)';
   ctx.fillRect(startX, detailY, gridW, 100);
@@ -358,28 +374,31 @@ export function drawCharSelect(
   ctx.lineWidth = 1;
   ctx.strokeRect(startX, detailY, gridW, 100);
 
+  ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#ffcc00';
   ctx.font = 'bold 16px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText(selected.name, CANVAS_W / 2, detailY + 20);
+  ctx.fillText(selected.name, cx, detailY + 20);
 
   ctx.fillStyle = COLORS.text;
   ctx.font = '13px monospace';
   const statsText = `HP: ${selected.stats.hp}  ATK: ${selected.stats.attack}  DEF: ${selected.stats.defense}`;
-  ctx.fillText(statsText, CANVAS_W / 2, detailY + 40);
+  ctx.fillText(statsText, cx, detailY + 40);
 
   const ability = ABILITIES[selected.ability];
   ctx.fillStyle = '#ff88ff';
-  ctx.font = '12px monospace';
-  ctx.fillText(`[Q] ${ability.name}: ${ability.description} (${ability.cooldown} turn cooldown)`, CANVAS_W / 2, detailY + 60);
+  ctx.font = L.compact ? '11px monospace' : '12px monospace';
+  ctx.fillText(`[Q] ${ability.name}: ${ability.description} (${ability.cooldown} turn cooldown)`, cx, detailY + 60);
 
-  // Controls
-  ctx.fillStyle = COLORS.textDim;
-  ctx.font = '12px monospace';
-  ctx.fillText('[Arrow Keys] Select   [Enter] Start', CANVAS_W / 2, detailY + 84);
+  // Keyboard hint (desktop only; it does not fit beside START on compact)
+  if (!L.compact) {
+    ctx.fillStyle = COLORS.textDim;
+    ctx.font = '12px monospace';
+    ctx.fillText('[Arrow Keys] Select   [Enter] Start', cx, detailY + 84);
+  }
 
   // START button (tap target)
-  const startBtn = { x: startX + gridW - 130, y: detailY + 66, w: 110, h: 26 };
+  const startBtn = { x: startX + gridW - (L.compact ? 118 : 130), y: detailY + (L.compact ? 68 : 66), w: 110, h: 26 };
   ctx.strokeStyle = '#ffcc00';
   ctx.lineWidth = 1;
   ctx.strokeRect(startBtn.x, startBtn.y, startBtn.w, startBtn.h);
@@ -392,20 +411,22 @@ export function drawCharSelect(
 
   // Continue banner for a saved run
   if (resume) {
-    ctx.font = 'bold 14px monospace';
+    ctx.font = L.compact ? 'bold 12px monospace' : 'bold 14px monospace';
     ctx.textAlign = 'center';
     if (confirmAbandon) {
       ctx.fillStyle = '#ff5555';
       ctx.fillText(
-        'Starting a new game will erase your saved run. [Enter] again to confirm, [C] to continue it.',
-        CANVAS_W / 2,
+        L.compact
+          ? 'Erase saved run? START again to confirm, [C] to continue.'
+          : 'Starting a new game will erase your saved run. [Enter] again to confirm, [C] to continue it.',
+        cx,
         detailY + 124
       );
     } else {
       ctx.fillStyle = COLORS.stairs;
       ctx.fillText(
         `[C] Continue saved run: ${resume.name} — Depth ${resume.depth}, Turn ${resume.turn}`,
-        CANVAS_W / 2,
+        cx,
         detailY + 124
       );
     }
@@ -421,39 +442,43 @@ export function drawGameOver(
   shareStatus: string = ''
 ): HitRegion[] {
   const regions: HitRegion[] = [];
+  const L = getLayout();
+  const H = canvasHeightFor('gameover', L);
+  const cx = L.mapW / 2;
+  const cy = H / 2;
   ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H + getHudHeight());
+  ctx.fillRect(0, 0, L.mapW, H);
 
   ctx.fillStyle = '#cc3333';
   ctx.font = 'bold 36px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('GAME OVER', CANVAS_W / 2, CANVAS_H / 2 - 60);
+  ctx.fillText('GAME OVER', cx, cy - 60);
 
   ctx.fillStyle = COLORS.textBright;
   ctx.font = '18px monospace';
-  ctx.fillText(`Score: ${state.score}`, CANVAS_W / 2, CANVAS_H / 2 - 10);
-  ctx.fillText(`Depth Reached: ${state.depth}`, CANVAS_W / 2, CANVAS_H / 2 + 20);
-  ctx.fillText(`Turns Survived: ${state.turn}`, CANVAS_W / 2, CANVAS_H / 2 + 50);
+  ctx.fillText(`Score: ${state.score}`, cx, cy - 10);
+  ctx.fillText(`Depth Reached: ${state.depth}`, cx, cy + 20);
+  ctx.fillText(`Turns Survived: ${state.turn}`, cx, cy + 50);
   ctx.fillStyle = '#ffd700';
-  ctx.fillText(`Gold Collected: ${state.treasureCollected}`, CANVAS_W / 2, CANVAS_H / 2 + 80);
+  ctx.fillText(`Gold Collected: ${state.treasureCollected}`, cx, cy + 80);
 
   // High scores
   if (state.highScores.length > 0) {
     ctx.fillStyle = COLORS.stairs;
     ctx.font = 'bold 16px monospace';
-    ctx.fillText('HIGH SCORES', CANVAS_W / 2, CANVAS_H / 2 + 120);
+    ctx.fillText('HIGH SCORES', cx, cy + 120);
     ctx.font = '14px monospace';
     ctx.fillStyle = COLORS.text;
     state.highScores.slice(0, 5).forEach((score, i) => {
-      ctx.fillText(`${i + 1}. ${score}`, CANVAS_W / 2, CANVAS_H / 2 + 145 + i * 20);
+      ctx.fillText(`${i + 1}. ${score}`, cx, cy + 145 + i * 20);
     });
   }
 
   // Share options
-  const shareY = CANVAS_H / 2 + 255;
+  const shareY = cy + 255;
   ctx.fillStyle = COLORS.stairs;
   ctx.font = 'bold 14px monospace';
-  ctx.fillText('SHARE YOUR RESULT', CANVAS_W / 2, shareY);
+  ctx.fillText('SHARE YOUR RESULT', cx, shareY);
 
   ctx.font = '13px monospace';
   const options = [
@@ -463,7 +488,7 @@ export function drawGameOver(
   ];
   const optionW = 140;
   const totalW = options.length * optionW;
-  const startX = (CANVAS_W - totalW) / 2;
+  const startX = (L.mapW - totalW) / 2;
 
   options.forEach((opt, i) => {
     const x = startX + i * optionW + optionW / 2;
@@ -477,14 +502,14 @@ export function drawGameOver(
   if (shareStatus) {
     ctx.fillStyle = '#88ff88';
     ctx.font = 'bold 14px monospace';
-    ctx.fillText(shareStatus, CANVAS_W / 2, shareY + 46);
+    ctx.fillText(shareStatus, cx, shareY + 46);
   }
 
   // Play again
   ctx.fillStyle = COLORS.textDim;
   ctx.font = '14px monospace';
-  ctx.fillText('[Enter] or tap here to play again', CANVAS_W / 2, shareY + 70);
-  regions.push({ x: CANVAS_W / 2 - 150, y: shareY + 56, w: 300, h: 28, action: { type: 'playAgain' } });
+  ctx.fillText('[Enter] or tap here to play again', cx, shareY + 70);
+  regions.push({ x: cx - 150, y: shareY + 56, w: 300, h: 28, action: { type: 'playAgain' } });
 
   return regions;
 }

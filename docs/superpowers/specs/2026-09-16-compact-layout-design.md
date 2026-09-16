@@ -61,7 +61,7 @@ export function canvasHeightFor(mode: UIMode, layout: Layout): number;
 - `getCamera` and `render` read `viewportW`/`viewportH`/`mapW`/`mapH` from `getLayout()`.
 - `drawHud` reads `hudH`, draws at `y = mapH`, and lays out:
   - **Desktop**: exactly as today.
-  - **Compact**: bars 150 wide at x 10. Stats block at `statsX = 170`: row 1 (`barY + 8`): `Depth`, `ATK` at +0, +95; `Score` at +190. Row 2 (`barY + 24`): `Level`, `DEF`, `Turn` at the same columns. Row 3 (`barY + 40`): `Gold` at +0 and the ability status (`[Q] Name: READY`) at +95, with active effects appended. Message log starts at `barY + 56`, `maxMessages` lines at 12px spacing.
+  - **Compact**: bars 150 wide at x 10. Stats block at `statsX = 170`: row 1 (`barY + 8`): `Depth`, `ATK` at +0, +95; `Score` at +190. Row 2 (`barY + 24`): `Level`, `DEF`, `Turn` at the same columns. Row 3 (`barY + 40`, which sits below both bars so the whole width is free): `Gold` at x 10 and the ability status (`[Q] Name: READY`) at x 130, with active effects appended. Message log starts at `barY + 56`, `maxMessages` lines at 12px spacing.
 - `render` returns regions exactly as today.
 
 ## Hero select (`drawCharSelect`)
