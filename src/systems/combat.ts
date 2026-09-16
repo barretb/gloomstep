@@ -3,6 +3,9 @@ import { createEntity } from '../ecs/entity';
 import { getAttackPower, getDefensePower } from './equipment';
 import { computeDamage } from './damage';
 
+/** Score awarded on top of the boss's XP for slaying it. */
+export const VICTORY_BONUS = 500;
+
 export function resolveCombat(state: GameState, attacker: Entity, defender: Entity): void {
   if (!attacker.stats || !defender.stats) return;
 
@@ -38,6 +41,13 @@ export function killEntity(state: GameState, victim: Entity, killer: Entity): vo
     killer.stats.xp += victim.xpValue;
     state.score += victim.xpValue;
     checkLevelUp(state, killer);
+  }
+
+  // Slaying the boss wins the run; Game.endTurn finishes it before monsters act.
+  if (victim.boss && killer.player) {
+    state.won = true;
+    state.score += VICTORY_BONUS;
+    state.messages.push('The Overlord falls. The dungeon is yours!');
   }
 
   // Chance to drop treasure
