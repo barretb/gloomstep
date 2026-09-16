@@ -2,6 +2,7 @@ import { CANVAS_W, CANVAS_H, COLORS, TILE_SIZE, MAX_MESSAGES } from '../constant
 import { GameState } from '../types';
 import { CHARACTERS } from '../data/characters';
 import { SpriteMap } from './sprite-loader';
+import { EQUIP_SLOTS, getAttackBonus, getDefenseBonus } from '../systems/equipment';
 
 const HUD_HEIGHT = 120;
 const HUD_Y = CANVAS_H;
@@ -20,7 +21,8 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
   ctx.strokeRect(0, HUD_Y, CANVAS_W, HUD_HEIGHT);
 
   const stats = state.player.stats!;
-  const equip = state.player.equipment;
+  const atkBonus = getAttackBonus(state.player);
+  const defBonus = getDefenseBonus(state.player);
 
   // HP bar
   const barX = PADDING;
@@ -61,8 +63,8 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
   ctx.fillStyle = COLORS.text;
   ctx.fillText(`Depth: ${state.depth}`, statsX, barY + 8);
   ctx.fillText(`Level: ${stats.level}`, statsX, barY + 24);
-  ctx.fillText(`ATK: ${stats.attack}${equip?.weapon?.item?.attackBonus ? '+' + equip.weapon.item.attackBonus : ''}`, statsX + 100, barY + 8);
-  ctx.fillText(`DEF: ${stats.defense}${equip?.armor?.item?.defenseBonus ? '+' + equip.armor.item.defenseBonus : ''}`, statsX + 100, barY + 24);
+  ctx.fillText(`ATK: ${stats.attack}${atkBonus ? '+' + atkBonus : ''}`, statsX + 100, barY + 8);
+  ctx.fillText(`DEF: ${stats.defense}${defBonus ? '+' + defBonus : ''}`, statsX + 100, barY + 24);
   ctx.fillText(`Score: ${state.score}`, statsX + 200, barY + 8);
   ctx.fillText(`Turn: ${state.turn}`, statsX + 200, barY + 24);
   ctx.fillStyle = '#ffd700';
@@ -108,38 +110,44 @@ export function drawInventoryScreen(ctx: CanvasRenderingContext2D, state: GameSt
 
   const equip = state.player.equipment;
 
-  // Equipment section
+  // Equipment section: six slots laid out in two columns
   let y = panelY + 60;
   ctx.fillStyle = COLORS.stairs;
   ctx.fillText('Equipment:', panelX + 20, y);
   y += 22;
-  ctx.fillStyle = COLORS.text;
-  const weaponName = equip?.weapon?.appearance?.name || '(none)';
-  const weaponBonus = equip?.weapon?.item?.attackBonus
-    ? `  (+${equip.weapon.item.attackBonus} ATK)`
-    : '';
-  ctx.fillText(`Weapon: ${weaponName}`, panelX + 30, y);
-  if (weaponBonus) {
-    ctx.fillStyle = '#88ff88';
-    ctx.fillText(weaponBonus, panelX + 30 + ctx.measureText(`Weapon: ${weaponName}`).width, y);
-  }
-  y += 18;
-  ctx.fillStyle = COLORS.text;
-  const armorName = equip?.armor?.appearance?.name || '(none)';
-  const armorBonus = equip?.armor?.item?.defenseBonus
-    ? `  (+${equip.armor.item.defenseBonus} DEF)`
-    : '';
-  ctx.fillText(`Armor:  ${armorName}`, panelX + 30, y);
-  if (armorBonus) {
-    ctx.fillStyle = '#88aaff';
-    ctx.fillText(armorBonus, panelX + 30 + ctx.measureText(`Armor:  ${armorName}`).width, y);
-  }
-  y += 26;
+  const slotRows = Math.ceil(EQUIP_SLOTS.length / 2);
+  const slotColW = Math.floor((panelW - 60) / 2);
+  EQUIP_SLOTS.forEach((info, i) => {
+    const col = Math.floor(i / slotRows);
+    const row = i % slotRows;
+    const x = panelX + 30 + col * slotColW;
+    const lineY = y + row * 18;
+    const label = `${info.label}: `;
+    ctx.fillStyle = COLORS.textDim;
+    ctx.fillText(label, x, lineY);
+    const labelW = ctx.measureText(label).width;
+
+    const item = equip?.[info.slot] ?? null;
+    if (!item) {
+      ctx.fillText('(none)', x + labelW, lineY);
+      return;
+    }
+    const name = item.appearance?.name ?? 'item';
+    ctx.fillStyle = COLORS.text;
+    ctx.fillText(name, x + labelW, lineY);
+    const atk = item.item?.attackBonus ?? 0;
+    const def = item.item?.defenseBonus ?? 0;
+    if (atk || def) {
+      ctx.fillStyle = atk ? '#88ff88' : '#88aaff';
+      ctx.fillText(atk ? ` +${atk} ATK` : ` +${def} DEF`, x + labelW + ctx.measureText(name).width, lineY);
+    }
+  });
+  y += slotRows * 18 + 8;
 
   // Stats summary
   const stats = state.player.stats!;
-  const atkBonus = equip?.weapon?.item?.attackBonus ?? 0;
-  const defBonus = equip?.armor?.item?.defenseBonus ?? 0;
+  const atkBonus = getAttackBonus(state.player);
+  const defBonus = getDefenseBonus(state.player);
 
   ctx.fillStyle = COLORS.stairs;
   ctx.fillText('Your Stats:', panelX + 20, y);

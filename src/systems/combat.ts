@@ -1,21 +1,6 @@
 import { Entity, GameState } from '../types';
 import { createEntity } from '../ecs/entity';
-
-function getAttackPower(entity: Entity): number {
-  let atk = entity.stats?.attack ?? 0;
-  if (entity.equipment?.weapon?.item?.attackBonus) {
-    atk += entity.equipment.weapon.item.attackBonus;
-  }
-  return atk;
-}
-
-function getDefensePower(entity: Entity): number {
-  let def = entity.stats?.defense ?? 0;
-  if (entity.equipment?.armor?.item?.defenseBonus) {
-    def += entity.equipment.armor.item.defenseBonus;
-  }
-  return def;
-}
+import { getAttackPower, getDefensePower } from './equipment';
 
 export function resolveCombat(state: GameState, attacker: Entity, defender: Entity): void {
   if (!attacker.stats || !defender.stats) return;

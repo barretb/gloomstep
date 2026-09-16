@@ -32,13 +32,14 @@ export interface InventoryComponent {
   capacity: number;
 }
 
-export interface EquipmentComponent {
-  weapon: Entity | null;
-  armor: Entity | null;
-}
+export type EquipSlot = 'weapon' | 'body' | 'offhand' | 'head' | 'hands' | 'legs';
+
+export type EquipmentComponent = Record<EquipSlot, Entity | null>;
 
 export interface ItemComponent {
   kind: 'potion' | 'weapon' | 'armor' | 'scroll';
+  /** Which equipment slot this occupies. Required for weapons and armor. */
+  slot?: EquipSlot;
   useEffect?: UseEffect;
   attackBonus?: number;
   defenseBonus?: number;

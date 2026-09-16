@@ -6,6 +6,7 @@ import { moveEntity } from './systems/movement';
 import { runAI } from './systems/ai';
 import { computeFOV } from './systems/fov';
 import { pickupItem, useItem, dropItem } from './systems/inventory';
+import { createEmptyEquipment } from './systems/equipment';
 import { loadHighScores, saveHighScore } from './systems/scoring';
 import { render } from './render/renderer';
 import { SpriteMap } from './render/sprite-loader';
@@ -38,7 +39,7 @@ export class Game {
       player: true,
       blocksMovement: true,
       inventory: { items: [], capacity: 10 },
-      equipment: { weapon: null, armor: null },
+      equipment: createEmptyEquipment(),
     });
     this.state = {
       dungeon,
@@ -105,7 +106,7 @@ export class Game {
       player: true,
       blocksMovement: true,
       inventory: { items: [], capacity: 10 },
-      equipment: { weapon: null, armor: null },
+      equipment: createEmptyEquipment(),
     });
 
     this.state = {

@@ -46,12 +46,31 @@ export function useItem(state: GameState, index: number): boolean {
       inv.items.splice(index, 1);
       return true;
     case 'weapon':
-      equipWeapon(state, item, index);
-      return true;
     case 'armor':
-      equipArmor(state, item, index);
-      return true;
+      return equipItem(state, item, index);
   }
+}
+
+/**
+ * Moves an item from the pack into its equipment slot, swapping whatever
+ * currently occupies that slot back into the pack. Returns false if the
+ * item has no slot.
+ */
+function equipItem(state: GameState, item: Entity, invIndex: number): boolean {
+  const slot = item.item?.slot;
+  if (!slot) return false;
+
+  const equip = state.player.equipment!;
+  const inv = state.player.inventory!;
+
+  inv.items.splice(invIndex, 1);
+  const previous = equip[slot];
+  if (previous) {
+    inv.items.push(previous);
+  }
+  equip[slot] = item;
+  state.messages.push(`Equipped ${item.appearance?.name ?? 'item'}.`);
+  return true;
 }
 
 function applyEffect(state: GameState, item: Entity): void {
@@ -101,20 +120,6 @@ function applyEffect(state: GameState, item: Entity): void {
   }
 }
 
-function equipWeapon(state: GameState, item: Entity, invIndex: number): void {
-  const equip = state.player.equipment!;
-  const inv = state.player.inventory!;
-
-  // Swap current weapon back to inventory
-  if (equip.weapon) {
-    inv.items.push(equip.weapon);
-  }
-
-  inv.items.splice(invIndex, 1);
-  equip.weapon = item;
-  state.messages.push(`Equipped ${item.appearance?.name ?? 'weapon'}.`);
-}
-
 /** Returns true if an item was dropped (i.e. the action consumed a turn). */
 export function dropItem(state: GameState, index: number): boolean {
   const inv = state.player.inventory;
@@ -128,17 +133,4 @@ export function dropItem(state: GameState, index: number): boolean {
   state.entities.push(item);
   state.messages.push(`Dropped ${item.appearance?.name ?? 'item'}.`);
   return true;
-}
-
-function equipArmor(state: GameState, item: Entity, invIndex: number): void {
-  const equip = state.player.equipment!;
-  const inv = state.player.inventory!;
-
-  if (equip.armor) {
-    inv.items.push(equip.armor);
-  }
-
-  inv.items.splice(invIndex, 1);
-  equip.armor = item;
-  state.messages.push(`Equipped ${item.appearance?.name ?? 'armor'}.`);
 }

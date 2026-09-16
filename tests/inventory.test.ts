@@ -2,7 +2,7 @@ import { afterEach, describe, it, expect, vi } from 'vitest';
 import { dropItem, pickupItem, useItem } from '../src/systems/inventory';
 import { createEntity } from '../src/ecs/entity';
 import { Entity } from '../src/types';
-import { makeMonster, makePlayer, makeState } from './helpers';
+import { makeGear, makeMonster, makePlayer, makeState } from './helpers';
 
 function makeLightningScroll(): Entity {
   return createEntity({
@@ -53,6 +53,48 @@ describe('useItem', () => {
     const state = makeState(player, [makeMonster(3, 1)]);
 
     expect(useItem(state, 0)).toBe(true);
+  });
+});
+
+describe('useItem equipping', () => {
+  it('keeps body armor equipped when a shield is equipped', () => {
+    const player = makePlayer(1, 1);
+    const armor = makeGear('Leather Armor', 'body', { defenseBonus: 1 });
+    const shield = makeGear('Wooden Shield', 'offhand', { defenseBonus: 1 });
+    player.inventory!.items.push(armor, shield);
+    const state = makeState(player);
+
+    useItem(state, 0);
+    useItem(state, 0);
+
+    expect(player.equipment!.body).toBe(armor);
+    expect(player.equipment!.offhand).toBe(shield);
+    expect(player.inventory!.items).toHaveLength(0);
+  });
+
+  it('returns the previous helmet to the pack when a second helmet is equipped', () => {
+    const player = makePlayer(1, 1);
+    const leather = makeGear('Leather Helmet', 'head', { defenseBonus: 1 });
+    const iron = makeGear('Iron Helmet', 'head', { defenseBonus: 2 });
+    player.inventory!.items.push(leather, iron);
+    const state = makeState(player);
+
+    useItem(state, 0);
+    useItem(state, 0);
+
+    expect(player.equipment!.head).toBe(iron);
+    expect(player.inventory!.items).toEqual([leather]);
+  });
+
+  it('refuses to equip gear that has no slot', () => {
+    const player = makePlayer(1, 1);
+    const broken = makeGear('Odd Trinket', 'body', { defenseBonus: 1 });
+    delete broken.item!.slot;
+    player.inventory!.items.push(broken);
+    const state = makeState(player);
+
+    expect(useItem(state, 0)).toBe(false);
+    expect(player.inventory!.items).toEqual([broken]);
   });
 });
 
