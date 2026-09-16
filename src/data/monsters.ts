@@ -1,4 +1,5 @@
 import { AIComponent, Appearance, Stats } from '../types';
+import { depthWeight } from './weighting';
 
 export interface MonsterTemplate {
   appearance: Appearance;
@@ -268,10 +269,6 @@ const MONSTERS: MonsterTemplate[] = [
 export function getMonsterTemplate(depth: number): MonsterTemplate {
   const available = MONSTERS.filter((m) => m.minDepth <= depth);
   // Weight toward harder monsters at deeper levels
-  const weighted = available.flatMap((m) => {
-    const relevance = depth - m.minDepth;
-    const weight = relevance < 2 ? 3 : relevance < 4 ? 2 : 1;
-    return Array(weight).fill(m);
-  });
+  const weighted = available.flatMap((m) => Array(depthWeight(depth, m.minDepth)).fill(m));
   return weighted[Math.floor(Math.random() * weighted.length)];
 }

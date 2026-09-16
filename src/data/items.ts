@@ -1,4 +1,5 @@
 import { Appearance, ItemComponent } from '../types';
+import { depthWeight } from './weighting';
 
 export interface ItemTemplate {
   appearance: Appearance;
@@ -188,7 +189,38 @@ const ITEMS: ItemTemplate[] = [
   },
 ];
 
-export function getRandomItem(depth: number): ItemTemplate {
-  const available = ITEMS.filter((i) => i.minDepth <= depth);
-  return available[Math.floor(Math.random() * available.length)];
+/** Gear this many floors below the current depth stops appearing. */
+const GEAR_PHASE_OUT_DEPTH = 6;
+
+export interface WeightedItem {
+  template: ItemTemplate;
+  weight: number;
+}
+
+/**
+ * The loot pool for a floor. Newly unlocked items are favoured (see
+ * depthWeight). Weapons and armor far below the current depth drop out
+ * entirely; potions and scrolls always stay in at minimum weight so
+ * healing remains available.
+ */
+export function getLootPool(depth: number): WeightedItem[] {
+  const pool: WeightedItem[] = [];
+  for (const template of ITEMS) {
+    if (template.minDepth > depth) continue;
+    const isGear = template.item.kind === 'weapon' || template.item.kind === 'armor';
+    if (isGear && depth - template.minDepth >= GEAR_PHASE_OUT_DEPTH) continue;
+    pool.push({ template, weight: depthWeight(depth, template.minDepth) });
+  }
+  return pool;
+}
+
+export function getRandomItem(depth: number, rng: () => number = Math.random): ItemTemplate {
+  const pool = getLootPool(depth);
+  const total = pool.reduce((sum, e) => sum + e.weight, 0);
+  let roll = rng() * total;
+  for (const entry of pool) {
+    roll -= entry.weight;
+    if (roll < 0) return entry.template;
+  }
+  return pool[pool.length - 1].template;
 }

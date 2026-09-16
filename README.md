@@ -41,7 +41,7 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 - Walk over gold (`$`) to collect it automatically — it adds to your score
 - Monsters have a chance to drop gold when slain; deeper monsters drop more
 - Find the stairs down (`>`) to descend to the next depth
-- Deeper floors have tougher monsters but better loot and more valuable treasure
+- Deeper floors have tougher monsters but better loot and more valuable treasure. Newly unlocked gear is the most common find, and weapons or armor from six or more floors up stop appearing entirely. Potions and scrolls always stay in the loot pool
 - Check your inventory to see every slot and how your combined equipment affects your ATK and DEF stats
 - Drop unwanted items with Shift+number to free up inventory space
 - Actions that do nothing (picking up from an empty tile, using an empty slot) do not cost a turn
