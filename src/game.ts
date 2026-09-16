@@ -23,6 +23,7 @@ import { SpriteMap } from './render/sprite-loader';
 import { CHARACTERS, CharacterTemplate } from './data/characters';
 import { drawCharSelect } from './render/hud';
 import { findHitRegion, HitRegion, TapAction } from './ui/hit-regions';
+import { canvasHeightFor, getLayout } from './render/layout';
 
 export class Game {
   state!: GameState;
@@ -298,7 +299,30 @@ export class Game {
   }
 
   private drawCharSelectScreen(): void {
+    this.ensureCanvasSize();
     this.hitRegions = drawCharSelect(this.ctx, this.charSelectIndex, this.sprites, this.resumeSummary, this.confirmAbandon);
+  }
+
+  /** Redraws whatever screen is active; used after the layout changes. */
+  redraw(): void {
+    if (this.state.uiMode === 'charselect') {
+      this.drawCharSelectScreen();
+    } else {
+      this.draw();
+    }
+  }
+
+  /** Sizes the canvas for the active screen. Resizing clears the context state, so re-apply what we rely on. */
+  private ensureCanvasSize(): void {
+    const layout = getLayout();
+    const w = layout.mapW;
+    const h = canvasHeightFor(this.state.uiMode, layout);
+    const canvas = this.ctx.canvas;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+      this.ctx.imageSmoothingEnabled = false;
+    }
   }
 
   /** Dispatches a tap at canvas pixel (x, y) to whatever was drawn there. */
@@ -421,6 +445,7 @@ export class Game {
   }
 
   draw(): void {
+    this.ensureCanvasSize();
     this.hitRegions = render(this.ctx, this.state, this.sprites, this.shareStatus);
   }
 }

@@ -1,17 +1,18 @@
-import { CANVAS_W, CANVAS_H } from './constants';
 import { Game } from './game';
 import { setupInput } from './systems/input';
-import { getHudHeight } from './render/hud';
 import { loadSprites } from './render/sprite-loader';
+import { computeLayout, getLayout, setLayout } from './render/layout';
 import { canvasPointFromClient } from './ui/hit-regions';
 import { controlBarVisible, setupTouchControls } from './ui/touch-controls';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
-canvas.width = CANVAS_W;
-canvas.height = CANVAS_H + getHudHeight();
+const container = document.getElementById('game-container') as HTMLElement;
 
 const ctx = canvas.getContext('2d')!;
 ctx.imageSmoothingEnabled = false;
+
+// Pick the layout for this screen before anything draws
+setLayout(computeLayout(container.clientWidth));
 
 // Load sprites then start game
 loadSprites().then((sprites) => {
@@ -65,4 +66,13 @@ loadSprites().then((sprites) => {
   });
 
   syncBar();
+
+  // Switch layouts when the window crosses the compact breakpoint (rotation, resize)
+  window.addEventListener('resize', () => {
+    const next = computeLayout(container.clientWidth);
+    if (next.compact !== getLayout().compact) {
+      setLayout(next);
+      game.redraw();
+    }
+  });
 });
