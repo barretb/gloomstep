@@ -4,8 +4,9 @@ import { getCamera } from './camera';
 import { drawTile, drawEntity } from './sprites';
 import { drawHud, drawInventoryScreen, drawGameOver, getHudHeight } from './hud';
 import { SpriteMap } from './sprite-loader';
+import { HitRegion } from '../ui/hit-regions';
 
-export function render(ctx: CanvasRenderingContext2D, state: GameState, sprites: SpriteMap, shareStatus: string = ''): void {
+export function render(ctx: CanvasRenderingContext2D, state: GameState, sprites: SpriteMap, shareStatus: string = ''): HitRegion[] {
   const cam = getCamera(state);
 
   // Clear entire canvas (game area + HUD)
@@ -61,10 +62,12 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, sprites:
   // Draw HUD
   drawHud(ctx, state);
 
-  // Draw overlays
+  // Draw overlays; whichever is active reports its tap regions
   if (state.uiMode === 'inventory') {
-    drawInventoryScreen(ctx, state);
-  } else if (state.uiMode === 'gameover') {
-    drawGameOver(ctx, state, shareStatus);
+    return drawInventoryScreen(ctx, state);
   }
+  if (state.uiMode === 'gameover') {
+    return drawGameOver(ctx, state, shareStatus);
+  }
+  return [];
 }
