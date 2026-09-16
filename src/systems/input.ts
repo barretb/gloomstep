@@ -61,6 +61,9 @@ export function keyToAction(key: string, mode: UIMode): Action | null {
     case 'i':
     case 'I':
       return { type: 'toggleInventory' };
+    case 'q':
+    case 'Q':
+      return { type: 'ability' };
     case '>':
       return { type: 'descend' };
     default:

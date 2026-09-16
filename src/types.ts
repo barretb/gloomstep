@@ -49,6 +49,25 @@ export interface TreasureComponent {
   value: number;
 }
 
+export type AbilityId =
+  | 'cleave'
+  | 'rage'
+  | 'arcane-bolt'
+  | 'vanish'
+  | 'survey'
+  | 'guard-stance'
+  | 'mend';
+
+export interface AbilityComponent {
+  id: AbilityId;
+  /** Turns until the ability can be used again. 0 means ready. */
+  cooldownRemaining: number;
+}
+
+export type StatusEffect =
+  | { kind: 'buff'; stat: 'attack' | 'defense'; amount: number; turnsRemaining: number }
+  | { kind: 'stealth'; turnsRemaining: number };
+
 export type UseEffect =
   | { type: 'heal'; amount: number }
   | { type: 'damage'; amount: number; range: number };
@@ -63,6 +82,8 @@ export interface Entity {
   equipment?: EquipmentComponent;
   item?: ItemComponent;
   treasure?: TreasureComponent;
+  ability?: AbilityComponent;
+  statusEffects?: StatusEffect[];
   player?: true;
   blocksMovement?: true;
   xpValue?: number;
@@ -89,6 +110,7 @@ export type Action =
   | { type: 'useItem'; index: number }
   | { type: 'dropItem'; index: number }
   | { type: 'descend' }
+  | { type: 'ability' }
   | { type: 'toggleInventory' };
 
 export type UIMode = 'charselect' | 'game' | 'inventory' | 'gameover';

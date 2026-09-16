@@ -3,6 +3,7 @@ import { GameState } from '../types';
 import { CHARACTERS } from '../data/characters';
 import { SpriteMap } from './sprite-loader';
 import { EQUIP_SLOTS, getAttackBonus, getDefenseBonus } from '../systems/equipment';
+import { ABILITIES } from '../data/abilities';
 
 const HUD_HEIGHT = 120;
 const HUD_Y = CANVAS_H;
@@ -69,6 +70,26 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
   ctx.fillText(`Turn: ${state.turn}`, statsX + 200, barY + 24);
   ctx.fillStyle = '#ffd700';
   ctx.fillText(`Gold: ${state.treasureCollected}`, statsX + 300, barY + 8);
+
+  // Ability status and active effects, e.g. "[Q] Rage: READY  RAGE 4"
+  const ability = state.player.ability;
+  if (ability) {
+    const def = ABILITIES[ability.id];
+    const ready = ability.cooldownRemaining === 0;
+    const effects = (state.player.statusEffects ?? []).map((e) =>
+      e.kind === 'stealth'
+        ? `HIDDEN ${e.turnsRemaining}`
+        : `${e.stat === 'attack' ? 'RAGE' : 'GUARD'} ${e.turnsRemaining}`
+    );
+    const status = ready ? 'READY' : `${ability.cooldownRemaining} turns`;
+    ctx.fillStyle = ready ? COLORS.textBright : COLORS.textDim;
+    ctx.fillText(`[Q] ${def.name}: ${status}`, statsX + 300, barY + 24);
+    if (effects.length > 0) {
+      ctx.fillStyle = '#ff88ff';
+      const prefixW = ctx.measureText(`[Q] ${def.name}: ${status}  `).width;
+      ctx.fillText(effects.join('  '), statsX + 300 + prefixW, barY + 24);
+    }
+  }
 
   // Message log
   const msgX = PADDING;
@@ -304,10 +325,10 @@ export function drawCharSelect(
   const detailY = startY + Math.ceil(CHARACTERS.length / cols) * cellH + 10;
 
   ctx.fillStyle = 'rgba(40, 40, 60, 0.7)';
-  ctx.fillRect(startX, detailY, gridW, 80);
+  ctx.fillRect(startX, detailY, gridW, 100);
   ctx.strokeStyle = '#ffcc00';
   ctx.lineWidth = 1;
-  ctx.strokeRect(startX, detailY, gridW, 80);
+  ctx.strokeRect(startX, detailY, gridW, 100);
 
   ctx.fillStyle = '#ffcc00';
   ctx.font = 'bold 16px monospace';
@@ -317,12 +338,17 @@ export function drawCharSelect(
   ctx.fillStyle = COLORS.text;
   ctx.font = '13px monospace';
   const statsText = `HP: ${selected.stats.hp}  ATK: ${selected.stats.attack}  DEF: ${selected.stats.defense}`;
-  ctx.fillText(statsText, CANVAS_W / 2, detailY + 42);
+  ctx.fillText(statsText, CANVAS_W / 2, detailY + 40);
+
+  const ability = ABILITIES[selected.ability];
+  ctx.fillStyle = '#ff88ff';
+  ctx.font = '12px monospace';
+  ctx.fillText(`[Q] ${ability.name}: ${ability.description} (${ability.cooldown} turn cooldown)`, CANVAS_W / 2, detailY + 60);
 
   // Controls
   ctx.fillStyle = COLORS.textDim;
   ctx.font = '12px monospace';
-  ctx.fillText('[Arrow Keys] Select   [Enter] Start', CANVAS_W / 2, detailY + 64);
+  ctx.fillText('[Arrow Keys] Select   [Enter] Start', CANVAS_W / 2, detailY + 84);
 }
 
 export function drawGameOver(

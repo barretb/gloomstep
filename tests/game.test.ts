@@ -16,6 +16,27 @@ describe('Game.tick', () => {
     game = startGame();
   });
 
+  it('gives the chosen hero their class ability with no cooldown', () => {
+    expect(game.state.player.ability).toEqual({ id: 'cleave', cooldownRemaining: 0 });
+    expect(game.state.player.statusEffects).toEqual([]);
+  });
+
+  it('does not spend a turn when the ability refuses', () => {
+    // The Human Warrior starts alone in the first room, so Cleave has no target.
+    game.tick({ type: 'ability' });
+
+    expect(game.state.turn).toBe(0);
+    expect(game.state.player.ability!.cooldownRemaining).toBe(0);
+  });
+
+  it('counts the ability cooldown down at the end of each turn', () => {
+    game.state.player.ability!.cooldownRemaining = 3;
+
+    game.tick({ type: 'wait' });
+
+    expect(game.state.player.ability!.cooldownRemaining).toBe(2);
+  });
+
   it('does not spend a turn when pickup finds nothing', () => {
     game.tick({ type: 'pickup' });
 

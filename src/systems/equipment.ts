@@ -36,14 +36,24 @@ export function getDefenseBonus(entity: Entity): number {
   return sumBonus(entity, (item) => item.item?.defenseBonus ?? 0);
 }
 
-/** Base attack plus all equipment bonuses. */
+/** Base attack plus equipment bonuses plus active attack buffs. */
 export function getAttackPower(entity: Entity): number {
-  return (entity.stats?.attack ?? 0) + getAttackBonus(entity);
+  return (entity.stats?.attack ?? 0) + getAttackBonus(entity) + sumBuffs(entity, 'attack');
 }
 
-/** Base defense plus all equipment bonuses. */
+/** Base defense plus equipment bonuses plus active defense buffs. */
 export function getDefensePower(entity: Entity): number {
-  return (entity.stats?.defense ?? 0) + getDefenseBonus(entity);
+  return (entity.stats?.defense ?? 0) + getDefenseBonus(entity) + sumBuffs(entity, 'defense');
+}
+
+function sumBuffs(entity: Entity, stat: 'attack' | 'defense'): number {
+  let total = 0;
+  for (const effect of entity.statusEffects ?? []) {
+    if (effect.kind === 'buff' && effect.stat === stat) {
+      total += effect.amount;
+    }
+  }
+  return total;
 }
 
 function sumBonus(entity: Entity, pick: (item: Entity) => number): number {
