@@ -1,21 +1,23 @@
-import { TILE_SIZE, VIEWPORT_W, VIEWPORT_H, COLORS, CANVAS_W } from '../constants';
+import { TILE_SIZE, COLORS } from '../constants';
+import { getLayout } from './layout';
 import { GameState } from '../types';
 import { getCamera } from './camera';
 import { drawTile, drawEntity } from './sprites';
-import { drawHud, drawInventoryScreen, drawGameOver, getHudHeight } from './hud';
+import { drawHud, drawInventoryScreen, drawGameOver } from './hud';
 import { SpriteMap } from './sprite-loader';
 import { HitRegion } from '../ui/hit-regions';
 
 export function render(ctx: CanvasRenderingContext2D, state: GameState, sprites: SpriteMap, shareStatus: string = ''): HitRegion[] {
+  const L = getLayout();
   const cam = getCamera(state);
 
   // Clear entire canvas (game area + HUD)
   ctx.fillStyle = COLORS.bg;
-  ctx.fillRect(0, 0, CANVAS_W, VIEWPORT_H * TILE_SIZE + getHudHeight());
+  ctx.fillRect(0, 0, L.mapW, L.mapH + L.hudH);
 
   // Draw tiles
-  for (let vy = 0; vy < VIEWPORT_H; vy++) {
-    for (let vx = 0; vx < VIEWPORT_W; vx++) {
+  for (let vy = 0; vy < L.viewportH; vy++) {
+    for (let vx = 0; vx < L.viewportW; vx++) {
       const mx = cam.x + vx;
       const my = cam.y + vy;
 
@@ -46,7 +48,7 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, sprites:
     const sx = (pos.x - cam.x) * TILE_SIZE;
     const sy = (pos.y - cam.y) * TILE_SIZE;
 
-    if (sx < 0 || sx >= VIEWPORT_W * TILE_SIZE || sy < 0 || sy >= VIEWPORT_H * TILE_SIZE) continue;
+    if (sx < 0 || sx >= L.mapW || sy < 0 || sy >= L.mapH) continue;
 
     const app = entity.appearance!;
     drawEntity(ctx, app.sprite, app.char, app.color, sx, sy, sprites);
