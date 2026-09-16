@@ -3,15 +3,17 @@ import { createEntity } from '../ecs/entity';
 import { BOSS, getEscortTemplate, getMonsterTemplate, MonsterTemplate } from '../data/monsters';
 import { getRandomItem } from '../data/items';
 import { BOSS_DEPTH } from '../constants';
+import { rngFor } from '../systems/rng';
 
-function rand(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+function rand(rng: () => number, min: number, max: number): number {
+  return Math.floor(rng() * (max - min + 1)) + min;
 }
 
 function randomFloorInRoom(state: GameState, room: Room): { x: number; y: number } | null {
+  const rng = rngFor(state);
   for (let attempts = 0; attempts < 20; attempts++) {
-    const x = rand(room.x + 1, room.x + room.w - 2);
-    const y = rand(room.y + 1, room.y + room.h - 2);
+    const x = rand(rng, room.x + 1, room.x + room.w - 2);
+    const y = rand(rng, room.y + 1, room.y + room.h - 2);
     if (state.dungeon.tiles[y][x] === Tile.Floor) {
       const occupied = state.entities.some(
         (e) => e.position && e.position.x === x && e.position.y === y
@@ -81,17 +83,19 @@ function spawnBoss(state: GameState, rooms: Room[]): void {
 
   // Deterministic placement: the boss takes the free tile nearest the centre,
   // the escorts the next two. Runs before regular spawns, so the room is empty.
+  const rng = rngFor(state);
   const free = freeTilesInRoom(state, bossRoom);
   if (free.length > 0) {
     placeMonster(state, BOSS, free[0], { boss: true });
   }
   for (const pos of free.slice(1, 3)) {
-    placeMonster(state, getEscortTemplate(), pos);
+    placeMonster(state, getEscortTemplate(rng), pos);
   }
 }
 
 export function populateDungeon(state: GameState, rooms: Room[]): void {
   const depth = state.depth;
+  const rng = rngFor(state);
   const monsterCount = 3 + depth * 2;
   const itemCount = 2 + Math.floor(depth / 2);
   const treasureCount = 2 + Math.floor(depth / 2);
@@ -107,19 +111,19 @@ export function populateDungeon(state: GameState, rooms: Room[]): void {
 
   // Spawn monsters
   for (let i = 0; i < monsterCount; i++) {
-    const room = spawnRooms[rand(0, spawnRooms.length - 1)];
+    const room = spawnRooms[rand(rng, 0, spawnRooms.length - 1)];
     const pos = randomFloorInRoom(state, room);
     if (!pos) continue;
-    placeMonster(state, getMonsterTemplate(depth), pos);
+    placeMonster(state, getMonsterTemplate(depth, rng), pos);
   }
 
   // Spawn items
   for (let i = 0; i < itemCount; i++) {
-    const room = spawnRooms[rand(0, spawnRooms.length - 1)];
+    const room = spawnRooms[rand(rng, 0, spawnRooms.length - 1)];
     const pos = randomFloorInRoom(state, room);
     if (!pos) continue;
 
-    const template = getRandomItem(depth);
+    const template = getRandomItem(depth, rng);
     const item = createEntity({
       position: { x: pos.x, y: pos.y },
       appearance: { ...template.appearance },
@@ -130,11 +134,11 @@ export function populateDungeon(state: GameState, rooms: Room[]): void {
 
   // Spawn static treasure
   for (let i = 0; i < treasureCount; i++) {
-    const room = spawnRooms[rand(0, spawnRooms.length - 1)];
+    const room = spawnRooms[rand(rng, 0, spawnRooms.length - 1)];
     const pos = randomFloorInRoom(state, room);
     if (!pos) continue;
 
-    const value = rand(depth * 3, depth * 12);
+    const value = rand(rng, depth * 3, depth * 12);
     const treasure = createEntity({
       position: { x: pos.x, y: pos.y },
       appearance: { name: 'Gold', char: '$', color: '#ffd700', sprite: 'treasure' },

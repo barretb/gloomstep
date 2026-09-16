@@ -2,6 +2,7 @@ import { Entity, GameState } from '../types';
 import { createEntity } from '../ecs/entity';
 import { getAttackPower, getDefensePower } from './equipment';
 import { computeDamage } from './damage';
+import { rngFor } from './rng';
 
 /** Score awarded on top of the boss's XP for slaying it. */
 export const VICTORY_BONUS = 500;
@@ -9,7 +10,7 @@ export const VICTORY_BONUS = 500;
 export function resolveCombat(state: GameState, attacker: Entity, defender: Entity): void {
   if (!attacker.stats || !defender.stats) return;
 
-  const damage = computeDamage(getAttackPower(attacker), getDefensePower(defender));
+  const damage = computeDamage(getAttackPower(attacker), getDefensePower(defender), rngFor(state));
 
   defender.stats.hp -= damage;
 
@@ -51,8 +52,9 @@ export function killEntity(state: GameState, victim: Entity, killer: Entity): vo
   }
 
   // Chance to drop treasure
-  if (victim.position && victim.xpValue && Math.random() < 0.4) {
-    const value = Math.max(1, Math.ceil(victim.xpValue / 3) + Math.floor(Math.random() * victim.xpValue / 3));
+  const rng = rngFor(state);
+  if (victim.position && victim.xpValue && rng() < 0.4) {
+    const value = Math.max(1, Math.ceil(victim.xpValue / 3) + Math.floor((rng() * victim.xpValue) / 3));
     const drop = createEntity({
       position: { x: victim.position.x, y: victim.position.y },
       appearance: { name: 'Gold', char: '$', color: '#ffd700', sprite: 'treasure' },

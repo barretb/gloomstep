@@ -5,6 +5,7 @@ import { SpriteMap } from './sprite-loader';
 import { EQUIP_SLOTS, getAttackBonus, getDefenseBonus } from '../systems/equipment';
 import { ABILITIES } from '../data/abilities';
 import { SaveSummary } from '../systems/persistence';
+import { DailyResult } from '../systems/daily';
 import { HitRegion } from '../ui/hit-regions';
 import { canvasHeightFor, getLayout } from './layout';
 
@@ -287,12 +288,20 @@ export function drawInventoryScreen(ctx: CanvasRenderingContext2D, state: GameSt
   return regions;
 }
 
+export interface DailyPanelInfo {
+  on: boolean;
+  date: string;
+  heroIndex: number;
+  result: DailyResult | null;
+}
+
 export function drawCharSelect(
   ctx: CanvasRenderingContext2D,
   selectedIndex: number,
   sprites: SpriteMap,
   resume: SaveSummary | null = null,
-  confirmAbandon = false
+  confirmAbandon = false,
+  daily: DailyPanelInfo | null = null
 ): HitRegion[] {
   const regions: HitRegion[] = [];
   const L = getLayout();
@@ -415,6 +424,22 @@ export function drawCharSelect(
   ctx.fillText('START', startBtn.x + startBtn.w / 2, startBtn.y + startBtn.h / 2);
   regions.push({ ...startBtn, action: { type: 'startHero' } });
 
+  // Daily toggle (tap target)
+  if (daily) {
+    const dailyBtn = L.compact
+      ? { x: startX + 8, y: detailY + 68, w: 130, h: 26 }
+      : { x: startX + 8, y: detailY + 66, w: 150, h: 26 };
+    ctx.strokeStyle = daily.on ? COLORS.stairs : COLORS.textDim;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(dailyBtn.x, dailyBtn.y, dailyBtn.w, dailyBtn.h);
+    ctx.fillStyle = daily.on ? COLORS.stairs : COLORS.textDim;
+    ctx.font = 'bold 12px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`[D] Daily: ${daily.on ? 'ON' : 'OFF'}`, dailyBtn.x + dailyBtn.w / 2, dailyBtn.y + dailyBtn.h / 2);
+    regions.push({ ...dailyBtn, action: { type: 'toggleDaily' } });
+  }
+
   // Continue banner for a saved run
   if (resume) {
     ctx.font = L.compact ? 'bold 12px monospace' : 'bold 14px monospace';
@@ -437,6 +462,22 @@ export function drawCharSelect(
       );
     }
     regions.push({ x: startX, y: detailY + 110, w: gridW, h: 28, action: { type: 'continueRun' } });
+  }
+
+  // Daily banner
+  if (daily?.on) {
+    const hero = CHARACTERS[daily.heroIndex];
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = L.compact ? 'bold 12px monospace' : 'bold 14px monospace';
+    ctx.fillStyle = COLORS.stairs;
+    ctx.fillText(`DAILY CHALLENGE ${daily.date} \u2014 Hero: ${hero.name}`, cx, detailY + 150);
+    ctx.font = L.compact ? '11px monospace' : '12px monospace';
+    ctx.fillStyle = COLORS.textDim;
+    const second = daily.result
+      ? `Already played today: score ${daily.result.score}${daily.result.won ? ' (victory)' : ''}. Come back tomorrow.`
+      : 'Same dungeon for everyone. One attempt.';
+    ctx.fillText(second, cx, detailY + 168);
   }
 
   return regions;
@@ -466,6 +507,12 @@ export function drawGameOver(
   } else {
     ctx.fillStyle = '#cc3333';
     ctx.fillText('GAME OVER', cx, cy - 60);
+  }
+
+  if (state.mode === 'daily' && state.dailyDate) {
+    ctx.fillStyle = COLORS.stairs;
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText(`DAILY CHALLENGE ${state.dailyDate}`, cx, cy - 88);
   }
 
   ctx.fillStyle = COLORS.textBright;

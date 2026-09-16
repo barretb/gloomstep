@@ -1,4 +1,5 @@
 import { GameState } from '../types';
+import { randomSeed } from './rng';
 
 export const SAVE_KEY = 'gloomstep-dungeon-save';
 export const SAVE_VERSION = 1;
@@ -76,6 +77,11 @@ export function loadRun(storage: RunStorage = defaultStorage()): GameState | nul
   state.player = state.entities.find((e) => e.player)!;
   state.uiMode = 'game';
   state.won = state.won ?? false;
+  state.mode = state.mode ?? 'normal';
+  if (typeof state.seed !== 'number' || typeof state.rngState !== 'number') {
+    state.seed = randomSeed();
+    state.rngState = state.seed;
+  }
   return state;
 }
 
