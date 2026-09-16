@@ -450,12 +450,16 @@ export class Game {
     const s = this.state;
     const stats = s.player.stats!;
     const name = s.player.appearance?.name ?? 'Adventurer';
+    const title = s.won
+      ? `\u{1F3C6} Gloomstep Dungeon \u2014 CONQUERED \u{1F3C6}`
+      : `\u2694\uFE0F Gloomstep Dungeon \u2694\uFE0F`;
+    const challenge = s.won ? 'I slew the Overlord. Can you?' : 'Can you survive the dungeon?';
     return [
-      `\u2694\uFE0F Gloomstep Dungeon \u2694\uFE0F`,
+      title,
       `Score: ${s.score} | Depth: ${s.depth} | Level: ${stats.level}`,
       `Turns Survived: ${s.turn}`,
       `Character: ${name}`,
-      `Can you survive the dungeon?`,
+      challenge,
       GAME_URL,
       `#GloomstepDungeon #roguelike`,
     ].join('\n');

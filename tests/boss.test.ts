@@ -9,6 +9,7 @@ import { killEntity, VICTORY_BONUS } from '../src/systems/combat';
 import { createEntity } from '../src/ecs/entity';
 import { Game } from '../src/game';
 import { createMemoryStorage, getSaveSummary, loadRun, saveRun, SAVE_KEY } from '../src/systems/persistence';
+import { drawGameOver, drawHud } from '../src/render/hud';
 
 function hasStairs(depth: number): boolean {
   const { dungeon } = generateDungeon(depth);
@@ -178,5 +179,38 @@ describe('save compatibility', () => {
     storage.setItem(SAVE_KEY, JSON.stringify(record));
 
     expect(loadRun(storage)!.won).toBe(false);
+  });
+});
+
+describe('victory presentation', () => {
+  it('titles the end screen VICTORY when the run was won', () => {
+    const state = makeState(makePlayer(1, 1));
+    state.won = true;
+    const { ctx, calls } = makeCtx();
+
+    drawGameOver(ctx, state);
+
+    const texts = calls.filter((c) => c.name === 'fillText').map((c) => c.args[0]);
+    expect(texts).toContain('VICTORY');
+    expect(texts).not.toContain('GAME OVER');
+  });
+
+  it('titles the end screen GAME OVER otherwise', () => {
+    const state = makeState(makePlayer(1, 1));
+    const { ctx, calls } = makeCtx();
+
+    drawGameOver(ctx, state);
+
+    expect(calls.filter((c) => c.name === 'fillText').map((c) => c.args[0])).toContain('GAME OVER');
+  });
+
+  it('marks the final floor in the HUD', () => {
+    const state = makeState(makePlayer(1, 1));
+    state.depth = BOSS_DEPTH;
+    const { ctx, calls } = makeCtx();
+
+    drawHud(ctx, state);
+
+    expect(calls.filter((c) => c.name === 'fillText').map((c) => c.args[0])).toContain('Depth: 10 (final)');
   });
 });
