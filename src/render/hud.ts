@@ -5,6 +5,7 @@ import { SpriteMap } from './sprite-loader';
 import { EQUIP_SLOTS, getAttackBonus, getDefenseBonus } from '../systems/equipment';
 import { ABILITIES } from '../data/abilities';
 import { SaveSummary } from '../systems/persistence';
+import { HitRegion } from '../ui/hit-regions';
 
 const HUD_HEIGHT = 120;
 const HUD_Y = CANVAS_H;
@@ -104,9 +105,13 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
   });
 }
 
-export function drawInventoryScreen(ctx: CanvasRenderingContext2D, state: GameState): void {
+export function drawInventoryScreen(ctx: CanvasRenderingContext2D, state: GameState): HitRegion[] {
+  const regions: HitRegion[] = [];
   const inv = state.player.inventory;
-  if (!inv) return;
+  if (!inv) return regions;
+
+  // Lowest priority: tapping anywhere outside the panel closes the inventory
+  regions.push({ x: 0, y: 0, w: CANVAS_W, h: CANVAS_H + HUD_HEIGHT, action: { type: 'closeInventory' } });
 
   // Overlay
   ctx.fillStyle = COLORS.inventoryBg;
@@ -120,6 +125,15 @@ export function drawInventoryScreen(ctx: CanvasRenderingContext2D, state: GameSt
   ctx.strokeStyle = COLORS.inventoryBorder;
   ctx.lineWidth = 2;
   ctx.strokeRect(panelX, panelY, panelW, panelH);
+
+  // Close mark (tap target)
+  const closeBox = { x: panelX + panelW - 36, y: panelY + 8, w: 28, h: 28 };
+  ctx.fillStyle = COLORS.textDim;
+  ctx.font = 'bold 18px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('✕', closeBox.x + closeBox.w / 2, closeBox.y + closeBox.h / 2);
+  regions.push({ ...closeBox, action: { type: 'closeInventory' } });
 
   // Title
   ctx.fillStyle = COLORS.textBright;
@@ -220,6 +234,7 @@ export function drawInventoryScreen(ctx: CanvasRenderingContext2D, state: GameSt
   } else {
     inv.items.forEach((item, i) => {
       const app = item.appearance!;
+      ctx.textAlign = 'left';
       ctx.fillStyle = app.color;
       ctx.fillText(`${i + 1}. `, panelX + 30, y);
       ctx.fillStyle = COLORS.text;
@@ -233,6 +248,12 @@ export function drawInventoryScreen(ctx: CanvasRenderingContext2D, state: GameSt
         ? ` (${item.item.useEffect.amount} dmg)`
         : '';
       ctx.fillText(`${app.name}${suffix}`, panelX + 60, y);
+      regions.push({ x: panelX + 20, y: y - 9, w: panelW - 120, h: 18, action: { type: 'useItem', index: i } });
+
+      ctx.textAlign = 'right';
+      ctx.fillStyle = COLORS.textDim;
+      ctx.fillText('[drop]', panelX + panelW - 20, y);
+      regions.push({ x: panelX + panelW - 90, y: y - 9, w: 70, h: 18, action: { type: 'dropItem', index: i } });
       y += 18;
     });
   }
@@ -242,7 +263,9 @@ export function drawInventoryScreen(ctx: CanvasRenderingContext2D, state: GameSt
   ctx.fillStyle = COLORS.textDim;
   ctx.font = '12px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('[1-9, 0] Use item  |  [Shift+1-9, 0] Drop item  |  [Esc/i] Close', CANVAS_W / 2, y);
+  ctx.fillText('[1-9, 0] or tap: Use  |  [Shift+num] or [drop]: Drop  |  [Esc/i] or ✕: Close', CANVAS_W / 2, y);
+
+  return regions;
 }
 
 export function drawCharSelect(
@@ -251,7 +274,8 @@ export function drawCharSelect(
   sprites: SpriteMap,
   resume: SaveSummary | null = null,
   confirmAbandon = false
-): void {
+): HitRegion[] {
+  const regions: HitRegion[] = [];
   const totalH = CANVAS_H + getHudHeight();
 
   // Background
@@ -279,6 +303,7 @@ export function drawCharSelect(
     const y = startY + row * cellH;
 
     const isSelected = i === selectedIndex;
+    regions.push({ x, y, w: cellW, h: cellH, action: { type: 'selectHero', index: i } });
 
     // Cell background
     if (isSelected) {
@@ -353,6 +378,18 @@ export function drawCharSelect(
   ctx.font = '12px monospace';
   ctx.fillText('[Arrow Keys] Select   [Enter] Start', CANVAS_W / 2, detailY + 84);
 
+  // START button (tap target)
+  const startBtn = { x: startX + gridW - 130, y: detailY + 66, w: 110, h: 26 };
+  ctx.strokeStyle = '#ffcc00';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(startBtn.x, startBtn.y, startBtn.w, startBtn.h);
+  ctx.fillStyle = '#ffcc00';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('START', startBtn.x + startBtn.w / 2, startBtn.y + startBtn.h / 2);
+  regions.push({ ...startBtn, action: { type: 'startHero' } });
+
   // Continue banner for a saved run
   if (resume) {
     ctx.font = 'bold 14px monospace';
@@ -372,14 +409,18 @@ export function drawCharSelect(
         detailY + 124
       );
     }
+    regions.push({ x: startX, y: detailY + 110, w: gridW, h: 28, action: { type: 'continueRun' } });
   }
+
+  return regions;
 }
 
 export function drawGameOver(
   ctx: CanvasRenderingContext2D,
   state: GameState,
   shareStatus: string = ''
-): void {
+): HitRegion[] {
+  const regions: HitRegion[] = [];
   ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H + getHudHeight());
 
@@ -429,6 +470,7 @@ export function drawGameOver(
     const y = shareY + 22;
     ctx.fillStyle = opt.color;
     ctx.fillText(`[${opt.key}] ${opt.label}`, x, y);
+    regions.push({ x: startX + i * optionW, y: shareY + 8, w: optionW, h: 28, action: { type: 'share', target: opt.key.toLowerCase() as 'm' | 'b' | 'c' } });
   });
 
   // Share status feedback
@@ -441,5 +483,8 @@ export function drawGameOver(
   // Play again
   ctx.fillStyle = COLORS.textDim;
   ctx.font = '14px monospace';
-  ctx.fillText('Press [Enter] to play again', CANVAS_W / 2, shareY + 70);
+  ctx.fillText('[Enter] or tap here to play again', CANVAS_W / 2, shareY + 70);
+  regions.push({ x: CANVAS_W / 2 - 150, y: shareY + 56, w: 300, h: 28, action: { type: 'playAgain' } });
+
+  return regions;
 }

@@ -22,6 +22,7 @@ import { render } from './render/renderer';
 import { SpriteMap } from './render/sprite-loader';
 import { CHARACTERS, CharacterTemplate } from './data/characters';
 import { drawCharSelect } from './render/hud';
+import { findHitRegion, HitRegion, TapAction } from './ui/hit-regions';
 
 export class Game {
   state!: GameState;
@@ -32,6 +33,8 @@ export class Game {
   shareStatus = '';
   resumeSummary: SaveSummary | null = null;
   confirmAbandon = false;
+  /** Tappable regions of whatever is currently drawn. */
+  hitRegions: HitRegion[] = [];
 
   constructor(ctx: CanvasRenderingContext2D, sprites: SpriteMap, storage: RunStorage = defaultStorage()) {
     this.ctx = ctx;
@@ -295,7 +298,47 @@ export class Game {
   }
 
   private drawCharSelectScreen(): void {
-    drawCharSelect(this.ctx, this.charSelectIndex, this.sprites, this.resumeSummary, this.confirmAbandon);
+    this.hitRegions = drawCharSelect(this.ctx, this.charSelectIndex, this.sprites, this.resumeSummary, this.confirmAbandon);
+  }
+
+  /** Dispatches a tap at canvas pixel (x, y) to whatever was drawn there. */
+  handleTap(x: number, y: number): void {
+    const region = findHitRegion(this.hitRegions, x, y);
+    if (!region) return;
+    this.applyTap(region.action);
+  }
+
+  private applyTap(action: TapAction): void {
+    switch (action.type) {
+      case 'selectHero':
+        this.charSelectIndex = action.index;
+        this.confirmAbandon = false;
+        this.drawCharSelectScreen();
+        return;
+      case 'startHero':
+        this.handleCharSelectInput('Enter');
+        return;
+      case 'continueRun':
+        this.handleCharSelectInput('c');
+        return;
+      case 'useItem':
+        this.tick({ type: 'useItem', index: action.index });
+        return;
+      case 'dropItem':
+        this.tick({ type: 'dropItem', index: action.index });
+        return;
+      case 'closeInventory':
+        if (this.state.uiMode === 'inventory') {
+          this.tick({ type: 'toggleInventory' });
+        }
+        return;
+      case 'share':
+        this.handleGameOverInput(action.target);
+        return;
+      case 'playAgain':
+        this.handleGameOverInput('Enter');
+        return;
+    }
   }
 
   handleGameOverInput(key: string): void {
@@ -378,7 +421,7 @@ export class Game {
   }
 
   draw(): void {
-    render(this.ctx, this.state, this.sprites, this.shareStatus);
+    this.hitRegions = render(this.ctx, this.state, this.sprites, this.shareStatus);
   }
 }
 
