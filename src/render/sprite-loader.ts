@@ -4,11 +4,9 @@ import { CHARACTERS } from '../data/characters';
 export type SpriteMap = Map<string, HTMLImageElement>;
 
 // All sprite slugs and their file paths relative to /sprites/
+// Tiles, treasure and the Scroll of Lightning have no PNGs yet and use the
+// procedurally generated placeholders from placeholder-sprites.ts.
 const SPRITE_PATHS: Record<string, string> = {
-  // Tiles
-  'wall': 'tiles/wall.png',
-  'floor': 'tiles/floor.png',
-  'stairs-down': 'tiles/stairs-down.png',
   // Player (default)
   'player': 'player.png',
   // Monsters — Depth 1
@@ -60,8 +58,6 @@ const SPRITE_PATHS: Record<string, string> = {
   'potion-blue': 'items/potion_blue_002.png',
   'potion-greater': 'items/potion2.png',
   'potion-elixir': 'items/potion3.png',
-  // Scrolls
-  'scroll-of-lightning': 'items/scroll-of-lightning.png',
   // Swords
   'sword-rusty': 'items/sword1.png',
   'sword-short': 'items/sword_006.png',

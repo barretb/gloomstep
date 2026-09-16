@@ -1,9 +1,11 @@
 import { Entity, GameState } from '../types';
+import { killEntity } from './combat';
 
-export function pickupItem(state: GameState): void {
+/** Returns true if an item was picked up (i.e. the action consumed a turn). */
+export function pickupItem(state: GameState): boolean {
   const pos = state.player.position!;
   const inv = state.player.inventory;
-  if (!inv) return;
+  if (!inv) return false;
 
   const itemIndex = state.entities.findIndex(
     (e) => e.item && e.position && e.position.x === pos.x && e.position.y === pos.y
@@ -11,12 +13,12 @@ export function pickupItem(state: GameState): void {
 
   if (itemIndex < 0) {
     state.messages.push('Nothing to pick up here.');
-    return;
+    return false;
   }
 
   if (inv.items.length >= inv.capacity) {
     state.messages.push('Inventory is full!');
-    return;
+    return false;
   }
 
   const item = state.entities[itemIndex];
@@ -24,30 +26,31 @@ export function pickupItem(state: GameState): void {
   delete item.position; // remove from map
   inv.items.push(item);
   state.messages.push(`Picked up ${item.appearance?.name ?? 'an item'}.`);
+  return true;
 }
 
-export function useItem(state: GameState, index: number): void {
+/** Returns true if an item was used or equipped (i.e. the action consumed a turn). */
+export function useItem(state: GameState, index: number): boolean {
   const inv = state.player.inventory;
-  if (!inv || index < 0 || index >= inv.items.length) return;
+  if (!inv || index < 0 || index >= inv.items.length) return false;
 
   const item = inv.items[index];
   const itemComp = item.item;
-  if (!itemComp) return;
+  if (!itemComp) return false;
 
   switch (itemComp.kind) {
     case 'potion':
     case 'scroll':
-      if (itemComp.useEffect) {
-        applyEffect(state, item);
-        inv.items.splice(index, 1);
-      }
-      break;
+      if (!itemComp.useEffect) return false;
+      applyEffect(state, item);
+      inv.items.splice(index, 1);
+      return true;
     case 'weapon':
       equipWeapon(state, item, index);
-      break;
+      return true;
     case 'armor':
       equipArmor(state, item, index);
-      break;
+      return true;
   }
 }
 
@@ -88,13 +91,7 @@ function applyEffect(state: GameState, item: Entity): void {
           `${name} strikes ${nearest.appearance?.name ?? 'enemy'} for ${effect.amount} damage!`
         );
         if (nearest.stats.hp <= 0) {
-          state.messages.push(`${nearest.appearance?.name ?? 'Enemy'} is defeated!`);
-          if (nearest.xpValue && state.player.stats) {
-            state.player.stats.xp += nearest.xpValue;
-            state.score += nearest.xpValue;
-          }
-          const idx = state.entities.indexOf(nearest);
-          if (idx >= 0) state.entities.splice(idx, 1);
+          killEntity(state, nearest, state.player);
         }
       } else {
         state.messages.push(`${name} fizzles... no target in range.`);
@@ -118,9 +115,10 @@ function equipWeapon(state: GameState, item: Entity, invIndex: number): void {
   state.messages.push(`Equipped ${item.appearance?.name ?? 'weapon'}.`);
 }
 
-export function dropItem(state: GameState, index: number): void {
+/** Returns true if an item was dropped (i.e. the action consumed a turn). */
+export function dropItem(state: GameState, index: number): boolean {
   const inv = state.player.inventory;
-  if (!inv || index < 0 || index >= inv.items.length) return;
+  if (!inv || index < 0 || index >= inv.items.length) return false;
 
   const item = inv.items[index];
   const pos = state.player.position!;
@@ -129,6 +127,7 @@ export function dropItem(state: GameState, index: number): void {
   item.position = { x: pos.x, y: pos.y };
   state.entities.push(item);
   state.messages.push(`Dropped ${item.appearance?.name ?? 'item'}.`);
+  return true;
 }
 
 function equipArmor(state: GameState, item: Entity, invIndex: number): void {

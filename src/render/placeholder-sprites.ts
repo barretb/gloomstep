@@ -225,6 +225,24 @@ function drawScroll(): HTMLImageElement {
   return canvasToImage(c);
 }
 
+function drawTreasure(): HTMLImageElement {
+  const [c, ctx] = createCanvas();
+  const u = Math.floor(TILE_SIZE / 16);
+  // Pile of coins
+  ctx.fillStyle = '#c9a100';
+  ctx.fillRect(3 * u, 10 * u, 10 * u, 3 * u);
+  ctx.fillRect(5 * u, 8 * u, 6 * u, 2 * u);
+  ctx.fillStyle = '#ffd700';
+  ctx.fillRect(4 * u, 9 * u, 3 * u, 2 * u);
+  ctx.fillRect(8 * u, 7 * u, 3 * u, 2 * u);
+  ctx.fillRect(6 * u, 11 * u, 3 * u, 2 * u);
+  // Sparkle
+  ctx.fillStyle = '#fff8c0';
+  ctx.fillRect(5 * u, 9 * u, u, u);
+  ctx.fillRect(9 * u, 7 * u, u, u);
+  return canvasToImage(c);
+}
+
 // -- Generate all placeholders --
 
 export function generatePlaceholderSprites(): SpriteMap {
@@ -237,6 +255,9 @@ export function generatePlaceholderSprites(): SpriteMap {
 
   // Player
   map.set('player', drawPlayer());
+
+  // Treasure
+  map.set('treasure', drawTreasure());
 
   // Monster placeholders (fallback if PNGs fail to load)
   const monsterDefs: [string, string, string][] = [

@@ -10,8 +10,8 @@ export function setupInput(onAction: (action: Action) => void, getUIMode: () => 
   });
 }
 
-function keyToAction(key: string, mode: UIMode): Action | null {
-  if (mode === 'gameover') {
+export function keyToAction(key: string, mode: UIMode): Action | null {
+  if (mode === 'gameover' || mode === 'charselect') {
     return null; // handled separately
   }
 
@@ -19,11 +19,14 @@ function keyToAction(key: string, mode: UIMode): Action | null {
     if (key === 'i' || key === 'Escape') {
       return { type: 'toggleInventory' };
     }
-    const num = parseInt(key);
-    if (num >= 1 && num <= 9) {
-      return { type: 'useItem', index: num - 1 };
+    // 1-9 map to slots 1-9; 0 maps to slot 10
+    const useKeys = '1234567890';
+    const useIndex = useKeys.indexOf(key);
+    if (key.length === 1 && useIndex >= 0) {
+      return { type: 'useItem', index: useIndex };
     }
-    const dropKeys = '!@#$%^&*(';
+    // Shift+1-9 and Shift+0 drop the matching slot
+    const dropKeys = '!@#$%^&*()';
     const dropIndex = dropKeys.indexOf(key);
     if (dropIndex >= 0) {
       return { type: 'dropItem', index: dropIndex };

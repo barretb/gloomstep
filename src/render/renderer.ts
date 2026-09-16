@@ -30,9 +30,9 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, sprites:
     }
   }
 
-  // Draw entities on visible tiles (items first, then blockers)
+  // Draw entities on visible tiles (ground items and treasure first, then blockers)
   const items = state.entities.filter(
-    (e) => e.position && e.item && !e.blocksMovement
+    (e) => e.position && (e.item || e.treasure) && !e.blocksMovement
   );
   const blockers = state.entities.filter(
     (e) => e.position && e.blocksMovement && !e.player

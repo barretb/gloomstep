@@ -30,7 +30,11 @@ export function moveEntity(
   );
 
   if (blocker) {
-    // Bump attack
+    // Bump attack, but only between the player and a monster.
+    // Monsters never fight each other; they are simply blocked.
+    if (!entity.player && !blocker.player) {
+      return false;
+    }
     resolveCombat(state, entity, blocker);
     return true; // turn consumed
   }

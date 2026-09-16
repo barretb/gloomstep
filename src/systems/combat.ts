@@ -37,7 +37,7 @@ export function resolveCombat(state: GameState, attacker: Entity, defender: Enti
   }
 }
 
-function killEntity(state: GameState, victim: Entity, killer: Entity): void {
+export function killEntity(state: GameState, victim: Entity, killer: Entity): void {
   const name = victim.appearance?.name ?? 'Something';
 
   if (victim.player) {
