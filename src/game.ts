@@ -1,6 +1,7 @@
 import { Action, GameState, Tile } from './types';
 import { BOSS_DEPTH } from './constants';
 import { makeRng, randomSeed, rngFor } from './systems/rng';
+import { dailyDate, dailyHeroIndex, dailySeed, DailyResult, getDailyResult, recordDailyResult } from './systems/daily';
 import { createEntity, resetEntityIds, setNextEntityId } from './ecs/entity';
 import { generateDungeon } from './dungeon/generator';
 import { populateDungeon } from './dungeon/populate';
@@ -50,6 +51,9 @@ export class Game {
   hitRegions: HitRegion[] = [];
   /** Message log scroll position: lines back from the newest message. */
   logScroll = 0;
+  dailyMode = false;
+  todaysDate = '';
+  todaysResult: DailyResult | null = null;
 
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -69,6 +73,9 @@ export class Game {
     this.charSelectIndex = 0;
     this.resumeSummary = getSaveSummary(this.storage);
     this.confirmAbandon = false;
+    this.dailyMode = false;
+    this.todaysDate = dailyDate(this.now());
+    this.todaysResult = getDailyResult(this.todaysDate, this.storage);
     // Create a minimal state for the charselect screen
     resetEntityIds();
     const { dungeon, rooms } = generateDungeon(1, makeRng(1));
@@ -111,18 +118,44 @@ export class Game {
       return;
     }
 
+    if (key === 'd' || key === 'D') {
+      this.dailyMode = !this.dailyMode;
+      this.confirmAbandon = false;
+      if (this.dailyMode) {
+        this.charSelectIndex = dailyHeroIndex(this.todaysDate);
+      }
+      this.drawCharSelectScreen();
+      return;
+    }
+
     if (key === 'Enter') {
+      // Today's daily is done: nothing to start
+      if (this.dailyMode && this.todaysResult) {
+        this.drawCharSelectScreen();
+        return;
+      }
       // A saved run is erased by a new game, so ask once before doing it.
       if (this.resumeSummary && !this.confirmAbandon) {
         this.confirmAbandon = true;
         this.drawCharSelectScreen();
         return;
       }
-      this.startRun(CHARACTERS[this.charSelectIndex], this.seedSource(), 'normal');
+      if (this.dailyMode) {
+        const hero = CHARACTERS[dailyHeroIndex(this.todaysDate)];
+        this.startRun(hero, dailySeed(this.todaysDate), 'daily', this.todaysDate);
+      } else {
+        this.startRun(CHARACTERS[this.charSelectIndex], this.seedSource(), 'normal');
+      }
       return;
     }
 
     this.confirmAbandon = false;
+
+    // The daily's hero is fixed; arrows do nothing
+    if (this.dailyMode) {
+      this.drawCharSelectScreen();
+      return;
+    }
 
     switch (key) {
       case 'ArrowRight':
@@ -331,6 +364,18 @@ export class Game {
   private finishRun(): void {
     this.state.gameOver = true;
     this.state.uiMode = 'gameover';
+    if (this.state.mode === 'daily' && this.state.dailyDate) {
+      recordDailyResult(
+        {
+          date: this.state.dailyDate,
+          score: this.state.score,
+          won: this.state.won,
+          depth: this.state.depth,
+          turn: this.state.turn,
+        },
+        this.storage
+      );
+    }
     this.state.highScores = saveHighScore(this.state.score);
     clearRun(this.storage);
     this.draw();
@@ -371,7 +416,12 @@ export class Game {
 
   private drawCharSelectScreen(): void {
     this.ensureCanvasSize();
-    this.hitRegions = drawCharSelect(this.ctx, this.charSelectIndex, this.sprites, this.resumeSummary, this.confirmAbandon);
+    this.hitRegions = drawCharSelect(this.ctx, this.charSelectIndex, this.sprites, this.resumeSummary, this.confirmAbandon, {
+      on: this.dailyMode,
+      date: this.todaysDate,
+      heroIndex: dailyHeroIndex(this.todaysDate),
+      result: this.todaysResult,
+    });
   }
 
   /** Redraws whatever screen is active; used after the layout changes. */
@@ -423,6 +473,9 @@ export class Game {
       case 'continueRun':
         this.handleCharSelectInput('c');
         return;
+      case 'toggleDaily':
+        this.handleCharSelectInput('d');
+        return;
       case 'useItem':
         this.tick({ type: 'useItem', index: action.index });
         return;
@@ -458,18 +511,18 @@ export class Game {
         break;
       case 'b':
         window.open(
-          `https://bsky.app/intent/compose?text=${encodeURIComponent(this.getShareText())}`,
+          `https://bsky.app/intent/compose?text=${encodeURIComponent(this.shareText())}`,
           '_blank'
         );
         break;
       case 'm':
         window.open(
-          `https://toot.kytta.dev/?text=${encodeURIComponent(this.getShareText())}`,
+          `https://toot.kytta.dev/?text=${encodeURIComponent(this.shareText())}`,
           '_blank'
         );
         break;
       case 'c':
-        this.copyToClipboard(this.getShareText());
+        this.copyToClipboard(this.shareText());
         break;
     }
   }
@@ -514,15 +567,22 @@ export class Game {
     document.body.removeChild(textarea);
   }
 
-  private getShareText(): string {
+  /** The text posted or copied from the end screen. */
+  shareText(): string {
     const GAME_URL = 'https://gloomstep.barretblake.dev';
     const s = this.state;
     const stats = s.player.stats!;
     const name = s.player.appearance?.name ?? 'Adventurer';
+    const daily = s.mode === 'daily' && s.dailyDate ? `Daily ${s.dailyDate}` : null;
     const title = s.won
-      ? `\u{1F3C6} Gloomstep Dungeon \u2014 CONQUERED \u{1F3C6}`
-      : `\u2694\uFE0F Gloomstep Dungeon \u2694\uFE0F`;
+      ? daily
+        ? `\u{1F3C6} Gloomstep ${daily} \u2014 CONQUERED \u{1F3C6}`
+        : `\u{1F3C6} Gloomstep Dungeon \u2014 CONQUERED \u{1F3C6}`
+      : daily
+        ? `\u{1F4C5} Gloomstep ${daily}`
+        : `\u2694\uFE0F Gloomstep Dungeon \u2694\uFE0F`;
     const challenge = s.won ? 'I slew the Overlord. Can you?' : 'Can you survive the dungeon?';
+    const tags = daily ? '#GloomstepDungeon #GloomstepDaily #roguelike' : '#GloomstepDungeon #roguelike';
     return [
       title,
       `Score: ${s.score} | Depth: ${s.depth} | Level: ${stats.level}`,
@@ -530,7 +590,7 @@ export class Game {
       `Character: ${name}`,
       challenge,
       GAME_URL,
-      `#GloomstepDungeon #roguelike`,
+      tags,
     ].join('\n');
   }
 
