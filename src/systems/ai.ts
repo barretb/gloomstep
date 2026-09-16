@@ -1,5 +1,6 @@
 import { Entity, GameState } from '../types';
 import { moveEntity } from './movement';
+import { isHidden } from './abilities';
 
 export function runAI(state: GameState): void {
   const playerPos = state.player.position!;
@@ -11,8 +12,9 @@ export function runAI(state: GameState): void {
     const dy = playerPos.y - entity.position.y;
     const dist = Math.abs(dx) + Math.abs(dy); // Manhattan distance
 
-    // Check if player is within alert range and visible
-    const canSeePlayer = dist <= entity.ai.alertRange &&
+    // Check if player is within alert range, visible, and not hidden
+    const canSeePlayer = !isHidden(state.player) &&
+      dist <= entity.ai.alertRange &&
       state.dungeon.visible[entity.position.y]?.[entity.position.x];
 
     if (canSeePlayer) {
