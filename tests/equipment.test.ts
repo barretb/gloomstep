@@ -22,6 +22,13 @@ describe('getAttackPower', () => {
     expect(getAttackPower(player)).toBe(8);
   });
 
+  it('adds active attack buffs to attack power', () => {
+    const player = makePlayer(1, 1, { attack: 5 });
+    player.statusEffects = [{ kind: 'buff', stat: 'attack', amount: 3, turnsRemaining: 6 }];
+
+    expect(getAttackPower(player)).toBe(8);
+  });
+
   it('returns base attack for an entity with no equipment', () => {
     const monster = createEntity({ stats: { hp: 1, maxHp: 1, attack: 4, defense: 0, level: 1, xp: 0, xpToNext: 0 } });
 
@@ -39,5 +46,19 @@ describe('getDefensePower', () => {
     player.equipment!.legs = makeGear('Greaves', 'legs', { defenseBonus: 2 });
 
     expect(getDefensePower(player)).toBe(13);
+  });
+
+  it('adds active defense buffs to defense power', () => {
+    const player = makePlayer(1, 1, { defense: 1 });
+    player.statusEffects = [{ kind: 'buff', stat: 'defense', amount: 4, turnsRemaining: 6 }];
+
+    expect(getDefensePower(player)).toBe(5);
+  });
+
+  it('ignores attack buffs when computing defense', () => {
+    const player = makePlayer(1, 1, { defense: 1 });
+    player.statusEffects = [{ kind: 'buff', stat: 'attack', amount: 3, turnsRemaining: 6 }];
+
+    expect(getDefensePower(player)).toBe(1);
   });
 });
