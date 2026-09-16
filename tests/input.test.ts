@@ -9,6 +9,14 @@ describe('keyToAction', () => {
     }
   );
 
+  it.each(['q', 'Q'])('maps %s to the ability action in game mode', (key) => {
+    expect(keyToAction(key, 'game')).toEqual({ type: 'ability' });
+  });
+
+  it('does not fire the ability from the inventory screen', () => {
+    expect(keyToAction('q', 'inventory')).toBeNull();
+  });
+
   it('uses inventory slot 10 when 0 is pressed', () => {
     expect(keyToAction('0', 'inventory')).toEqual({ type: 'useItem', index: 9 });
   });

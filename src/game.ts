@@ -7,6 +7,7 @@ import { runAI } from './systems/ai';
 import { computeFOV } from './systems/fov';
 import { pickupItem, useItem, dropItem } from './systems/inventory';
 import { createEmptyEquipment } from './systems/equipment';
+import { tickAbilities, useAbility } from './systems/abilities';
 import { loadHighScores, saveHighScore } from './systems/scoring';
 import { render } from './render/renderer';
 import { SpriteMap } from './render/sprite-loader';
@@ -107,6 +108,8 @@ export class Game {
       blocksMovement: true,
       inventory: { items: [], capacity: 10 },
       equipment: createEmptyEquipment(),
+      ability: { id: template.ability, cooldownRemaining: 0 },
+      statusEffects: [],
     });
 
     this.state = {
@@ -162,6 +165,15 @@ export class Game {
       return;
     }
 
+    if (action.type === 'ability') {
+      if (useAbility(this.state)) {
+        this.endTurn();
+      } else {
+        this.draw();
+      }
+      return;
+    }
+
     if (action.type === 'descend') {
       this.tryDescend();
       return;
@@ -185,6 +197,7 @@ export class Game {
     this.state.turn++;
 
     runAI(this.state);
+    tickAbilities(this.state);
     computeFOV(this.state);
 
     if (this.state.player.stats!.hp <= 0 && !this.state.gameOver) {
