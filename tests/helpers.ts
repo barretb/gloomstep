@@ -69,6 +69,7 @@ export function makeState(player: Entity, others: Entity[] = []): GameState {
     treasureCollected: 0,
     turn: 0,
     gameOver: false,
+    won: false,
     messages: [],
     uiMode: 'game',
     highScores: [],

@@ -1,5 +1,6 @@
 import { AIComponent, Appearance, Stats } from '../types';
 import { depthWeight } from './weighting';
+import { BOSS_DEPTH } from '../constants';
 
 export interface MonsterTemplate {
   appearance: Appearance;
@@ -257,13 +258,6 @@ export const MONSTERS: MonsterTemplate[] = [
     xpValue: 80,
     minDepth: 9,
   },
-  {
-    appearance: { name: 'Overlord', char: 'O', color: '#cc2222', sprite: 'overlord' },
-    stats: { hp: 56, maxHp: 56, attack: 15, defense: 5, level: 10, xp: 0, xpToNext: 0 },
-    ai: { type: 'chase', alertRange: 8 },
-    xpValue: 100,
-    minDepth: 10,
-  },
 ];
 
 export function getMonsterTemplate(depth: number): MonsterTemplate {
@@ -271,4 +265,19 @@ export function getMonsterTemplate(depth: number): MonsterTemplate {
   // Weight toward harder monsters at deeper levels
   const weighted = available.flatMap((m) => Array(depthWeight(depth, m.minDepth)).fill(m));
   return weighted[Math.floor(Math.random() * weighted.length)];
+}
+
+/** The final-floor boss. Not part of the random pool; spawned once by populateDungeon. */
+export const BOSS: MonsterTemplate = {
+  appearance: { name: 'Overlord', char: 'O', color: '#cc2222', sprite: 'overlord' },
+  stats: { hp: 120, maxHp: 120, attack: 16, defense: 6, level: 10, xp: 0, xpToNext: 0 },
+  ai: { type: 'chase', alertRange: 8 },
+  xpValue: 250,
+  minDepth: BOSS_DEPTH,
+};
+
+/** A uniformly chosen deep monster to guard the boss. */
+export function getEscortTemplate(): MonsterTemplate {
+  const deep = MONSTERS.filter((m) => m.minDepth >= 8);
+  return deep[Math.floor(Math.random() * deep.length)];
 }

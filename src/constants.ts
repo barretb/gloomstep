@@ -5,6 +5,9 @@ export const MAP_H = 40;
 
 export const FOV_RADIUS = 8;
 
+/** The final floor: no stairs down, the Overlord spawns here. */
+export const BOSS_DEPTH = 10;
+
 export const COLORS = {
   bg: '#0a0a1a',
   wall: '#4a4a6a',
