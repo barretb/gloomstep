@@ -12,6 +12,7 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 - **45+ items** — Swords, axes, hammers, bows, armor, shields, helmets, potions, and scrolls
 - **Turn-based combat** — Every move counts; plan your approach carefully
 - **Equipment system** — Six gear slots (weapon, body, off-hand, head, hands, legs); bonuses from every equipped piece stack
+- **Class abilities** — Every class has a signature ability on a turn cooldown, fired with Q
 - **Treasure** — Gold scattered through every level and dropped by slain monsters; collected automatically as you walk over it
 - **Field of view** — Explore using recursive shadowcasting; what lurks in the dark?
 - **Permadeath** — One life per run. High scores are saved locally
@@ -26,11 +27,28 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 | WASD / Arrow Keys | Move |
 | G | Pick up item |
 | I | Open / close inventory |
+| Q | Use class ability |
 | > | Descend stairs |
 | . | Wait a turn |
 | 1-9, 0 | Use inventory item 1-10 (inventory open) |
 | Shift+1-9, Shift+0 | Drop inventory item 1-10 (inventory open) |
 | Esc | Close inventory |
+
+### Class Abilities
+
+Each class has one ability. Press **Q** to use it; the HUD shows when it is ready.
+
+| Class | Ability | Effect | Cooldown |
+|-------|---------|--------|----------|
+| Warrior | Cleave | Strike every adjacent enemy with a normal attack | 10 turns |
+| Barbarian | Rage | +3 ATK for 6 turns | 15 turns |
+| Mage | Arcane Bolt | 8 + level damage to the nearest enemy in sight (range 6) | 6 turns |
+| Rogue | Vanish | Monsters lose sight of you for 5 turns | 15 turns |
+| Scout | Survey | Reveals the map layout within 12 tiles | 30 turns |
+| Sentinel | Guard Stance | +4 DEF for 6 turns | 15 turns |
+| Healer | Mend | Heal 30% of max HP | 12 turns |
+
+Abilities that find no target (Cleave with nothing adjacent, Arcane Bolt with nothing in sight, Mend at full health) do not fire and do not cost a turn. Using Rage or Guard Stance again while active refreshes the duration rather than stacking.
 
 ### Tips
 
@@ -44,6 +62,7 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 - Deeper floors have tougher monsters but better loot and more valuable treasure. Newly unlocked gear is the most common find, and weapons or armor from six or more floors up stop appearing entirely. Potions and scrolls always stay in the loot pool
 - Check your inventory to see every slot and how your combined equipment affects your ATK and DEF stats
 - Drop unwanted items with Shift+number to free up inventory space
+- Your class ability is often the difference in a tough fight; Rogues can Vanish to slip past a room, Scouts can Survey to find the stairs
 - Actions that do nothing (picking up from an empty tile, using an empty slot) do not cost a turn
 - Monsters never fight each other; only you can be attacked
 
@@ -81,11 +100,11 @@ Unit tests live in `tests/` and run with [Vitest](https://vitest.dev). They cove
 
 ```
 src/
-  data/         Character, monster, and item definitions
+  data/         Character, monster, item, and ability definitions
   dungeon/      BSP dungeon generation and population
   ecs/          Entity factory
   render/       Canvas rendering, sprites, HUD, camera
-  systems/      Input, movement, combat, AI, FOV, inventory, equipment, scoring
+  systems/      Input, movement, combat, AI, FOV, inventory, equipment, abilities, targeting, scoring
   constants.ts  Game configuration
   types.ts      Core type definitions
   game.ts       Main game orchestrator
