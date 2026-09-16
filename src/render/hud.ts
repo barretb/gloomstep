@@ -4,6 +4,7 @@ import { CHARACTERS } from '../data/characters';
 import { SpriteMap } from './sprite-loader';
 import { EQUIP_SLOTS, getAttackBonus, getDefenseBonus } from '../systems/equipment';
 import { ABILITIES } from '../data/abilities';
+import { SaveSummary } from '../systems/persistence';
 
 const HUD_HEIGHT = 120;
 const HUD_Y = CANVAS_H;
@@ -247,7 +248,9 @@ export function drawInventoryScreen(ctx: CanvasRenderingContext2D, state: GameSt
 export function drawCharSelect(
   ctx: CanvasRenderingContext2D,
   selectedIndex: number,
-  sprites: SpriteMap
+  sprites: SpriteMap,
+  resume: SaveSummary | null = null,
+  confirmAbandon = false
 ): void {
   const totalH = CANVAS_H + getHudHeight();
 
@@ -349,6 +352,27 @@ export function drawCharSelect(
   ctx.fillStyle = COLORS.textDim;
   ctx.font = '12px monospace';
   ctx.fillText('[Arrow Keys] Select   [Enter] Start', CANVAS_W / 2, detailY + 84);
+
+  // Continue banner for a saved run
+  if (resume) {
+    ctx.font = 'bold 14px monospace';
+    ctx.textAlign = 'center';
+    if (confirmAbandon) {
+      ctx.fillStyle = '#ff5555';
+      ctx.fillText(
+        'Starting a new game will erase your saved run. [Enter] again to confirm, [C] to continue it.',
+        CANVAS_W / 2,
+        detailY + 124
+      );
+    } else {
+      ctx.fillStyle = COLORS.stairs;
+      ctx.fillText(
+        `[C] Continue saved run: ${resume.name} — Depth ${resume.depth}, Turn ${resume.turn}`,
+        CANVAS_W / 2,
+        detailY + 124
+      );
+    }
+  }
 }
 
 export function drawGameOver(

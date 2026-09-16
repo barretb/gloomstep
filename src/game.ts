@@ -1,5 +1,5 @@
 import { Action, GameState, Tile } from './types';
-import { createEntity, resetEntityIds } from './ecs/entity';
+import { createEntity, resetEntityIds, setNextEntityId } from './ecs/entity';
 import { generateDungeon } from './dungeon/generator';
 import { populateDungeon } from './dungeon/populate';
 import { moveEntity } from './systems/movement';
@@ -9,6 +9,15 @@ import { pickupItem, useItem, dropItem } from './systems/inventory';
 import { createEmptyEquipment } from './systems/equipment';
 import { tickAbilities, useAbility } from './systems/abilities';
 import { loadHighScores, saveHighScore } from './systems/scoring';
+import {
+  clearRun,
+  defaultStorage,
+  getSaveSummary,
+  loadRun,
+  RunStorage,
+  saveRun,
+  SaveSummary,
+} from './systems/persistence';
 import { render } from './render/renderer';
 import { SpriteMap } from './render/sprite-loader';
 import { CHARACTERS, CharacterTemplate } from './data/characters';
@@ -18,17 +27,23 @@ export class Game {
   state!: GameState;
   ctx: CanvasRenderingContext2D;
   sprites: SpriteMap;
+  storage: RunStorage;
   charSelectIndex = 0;
   shareStatus = '';
+  resumeSummary: SaveSummary | null = null;
+  confirmAbandon = false;
 
-  constructor(ctx: CanvasRenderingContext2D, sprites: SpriteMap) {
+  constructor(ctx: CanvasRenderingContext2D, sprites: SpriteMap, storage: RunStorage = defaultStorage()) {
     this.ctx = ctx;
     this.sprites = sprites;
+    this.storage = storage;
     this.showCharSelect();
   }
 
   showCharSelect(): void {
     this.charSelectIndex = 0;
+    this.resumeSummary = getSaveSummary(this.storage);
+    this.confirmAbandon = false;
     // Create a minimal state for the charselect screen
     resetEntityIds();
     const { dungeon, rooms } = generateDungeon(1);
@@ -62,6 +77,24 @@ export class Game {
     const cols = 5;
     const total = CHARACTERS.length;
 
+    if ((key === 'c' || key === 'C') && this.resumeSummary) {
+      this.resumeRun();
+      return;
+    }
+
+    if (key === 'Enter') {
+      // A saved run is erased by a new game, so ask once before doing it.
+      if (this.resumeSummary && !this.confirmAbandon) {
+        this.confirmAbandon = true;
+        this.drawCharSelectScreen();
+        return;
+      }
+      this.startGameWithCharacter(CHARACTERS[this.charSelectIndex]);
+      return;
+    }
+
+    this.confirmAbandon = false;
+
     switch (key) {
       case 'ArrowRight':
       case 'd':
@@ -79,14 +112,28 @@ export class Game {
       case 'w':
         this.charSelectIndex = Math.max(this.charSelectIndex - cols, 0);
         break;
-      case 'Enter':
-        this.startGameWithCharacter(CHARACTERS[this.charSelectIndex]);
-        return;
     }
     this.drawCharSelectScreen();
   }
 
+  /** Loads the saved run. Returns false if there is none. */
+  resumeRun(): boolean {
+    const state = loadRun(this.storage);
+    if (!state) return false;
+
+    this.state = state;
+    this.state.highScores = loadHighScores();
+    setNextEntityId(maxEntityId(state) + 1);
+
+    const name = state.player.appearance?.name ?? 'Adventurer';
+    this.state.messages.push(`Welcome back, ${name}. Depth ${state.depth}, turn ${state.turn}.`);
+    computeFOV(this.state);
+    this.draw();
+    return true;
+  }
+
   private startGameWithCharacter(template: CharacterTemplate): void {
+    clearRun(this.storage);
     resetEntityIds();
     const depth = 1;
     const { dungeon, rooms } = generateDungeon(depth);
@@ -200,7 +247,8 @@ export class Game {
     tickAbilities(this.state);
     computeFOV(this.state);
 
-    if (this.state.player.stats!.hp <= 0 && !this.state.gameOver) {
+    const died = this.state.player.stats!.hp <= 0 && !this.state.gameOver;
+    if (died) {
       this.state.gameOver = true;
       this.state.uiMode = 'gameover';
       this.state.highScores = saveHighScore(this.state.score);
@@ -208,6 +256,12 @@ export class Game {
 
     if (this.state.messages.length > 50) {
       this.state.messages = this.state.messages.slice(-50);
+    }
+
+    if (died) {
+      clearRun(this.storage);
+    } else {
+      saveRun(this.state, this.storage);
     }
 
     this.draw();
@@ -236,11 +290,12 @@ export class Game {
 
     this.state.messages.push(`You descend to depth ${this.state.depth}...`);
     computeFOV(this.state);
+    saveRun(this.state, this.storage);
     this.draw();
   }
 
   private drawCharSelectScreen(): void {
-    drawCharSelect(this.ctx, this.charSelectIndex, this.sprites);
+    drawCharSelect(this.ctx, this.charSelectIndex, this.sprites, this.resumeSummary, this.confirmAbandon);
   }
 
   handleGameOverInput(key: string): void {
@@ -325,4 +380,19 @@ export class Game {
   draw(): void {
     render(this.ctx, this.state, this.sprites, this.shareStatus);
   }
+}
+
+/** Highest entity id anywhere in the state, including carried and equipped items. */
+function maxEntityId(state: GameState): number {
+  let max = 0;
+  for (const entity of state.entities) {
+    max = Math.max(max, entity.id);
+  }
+  for (const item of state.player.inventory?.items ?? []) {
+    max = Math.max(max, item.id);
+  }
+  for (const item of Object.values(state.player.equipment ?? {})) {
+    if (item) max = Math.max(max, item.id);
+  }
+  return max;
 }

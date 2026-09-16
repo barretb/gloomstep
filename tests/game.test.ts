@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Game } from '../src/game';
+import { createEntity } from '../src/ecs/entity';
+import { createMemoryStorage, getSaveSummary, RunStorage } from '../src/systems/persistence';
 import { makeCtx } from './helpers';
 
-function startGame(): Game {
+function startGame(storage: RunStorage = createMemoryStorage()): Game {
   const { ctx } = makeCtx();
-  const game = new Game(ctx, new Map());
+  const game = new Game(ctx, new Map(), storage);
   game.handleCharSelectInput('Enter');
   return game;
 }
@@ -59,5 +61,110 @@ describe('Game.tick', () => {
 
     expect(game.state.turn).toBe(0);
     expect(game.state.uiMode).toBe('inventory');
+  });
+});
+
+describe('Game autosave', () => {
+  it('saves the run after a turn', () => {
+    const storage = createMemoryStorage();
+    const game = startGame(storage);
+
+    game.tick({ type: 'wait' });
+
+    expect(getSaveSummary(storage)).toEqual({ name: 'Human Warrior', depth: 1, turn: 1 });
+  });
+
+  it('clears the save when the hero dies', () => {
+    const storage = createMemoryStorage();
+    const game = startGame(storage);
+    game.tick({ type: 'wait' });
+    game.state.player.stats!.hp = 0;
+
+    game.tick({ type: 'wait' });
+
+    expect(game.state.gameOver).toBe(true);
+    expect(getSaveSummary(storage)).toBeNull();
+  });
+});
+
+describe('Game resume', () => {
+  function storageWithSave(): RunStorage {
+    const storage = createMemoryStorage();
+    const game = startGame(storage);
+    game.tick({ type: 'wait' });
+    game.tick({ type: 'wait' });
+    return storage;
+  }
+
+  it('offers to continue when a save exists', () => {
+    const storage = storageWithSave();
+    const { ctx } = makeCtx();
+
+    const game = new Game(ctx, new Map(), storage);
+
+    expect(game.state.uiMode).toBe('charselect');
+    expect(game.resumeSummary).toEqual({ name: 'Human Warrior', depth: 1, turn: 2 });
+  });
+
+  it('restores the saved run when C is pressed', () => {
+    const storage = storageWithSave();
+    const { ctx } = makeCtx();
+    const game = new Game(ctx, new Map(), storage);
+
+    game.handleCharSelectInput('c');
+
+    expect(game.state.uiMode).toBe('game');
+    expect(game.state.turn).toBe(2);
+    expect(game.state.player.appearance!.name).toBe('Human Warrior');
+    expect(game.state.player).toBe(game.state.entities.find((e) => e.player));
+    expect(game.state.messages.at(-1)).toContain('Welcome back');
+  });
+
+  it('asks for confirmation before a new game erases the save', () => {
+    const storage = storageWithSave();
+    const { ctx } = makeCtx();
+    const game = new Game(ctx, new Map(), storage);
+
+    game.handleCharSelectInput('Enter');
+
+    expect(game.confirmAbandon).toBe(true);
+    expect(game.state.uiMode).toBe('charselect');
+    expect(getSaveSummary(storage)).not.toBeNull();
+  });
+
+  it('starts a new run and erases the save on the second Enter', () => {
+    const storage = storageWithSave();
+    const { ctx } = makeCtx();
+    const game = new Game(ctx, new Map(), storage);
+
+    game.handleCharSelectInput('Enter');
+    game.handleCharSelectInput('Enter');
+
+    expect(game.state.uiMode).toBe('game');
+    expect(game.state.turn).toBe(0);
+    expect(getSaveSummary(storage)).toBeNull();
+  });
+
+  it('cancels the confirmation when another key is pressed', () => {
+    const storage = storageWithSave();
+    const { ctx } = makeCtx();
+    const game = new Game(ctx, new Map(), storage);
+
+    game.handleCharSelectInput('Enter');
+    game.handleCharSelectInput('ArrowRight');
+
+    expect(game.confirmAbandon).toBe(false);
+  });
+
+  it('numbers new entities above every saved id after resuming', () => {
+    const storage = storageWithSave();
+    const { ctx } = makeCtx();
+    const game = new Game(ctx, new Map(), storage);
+    game.handleCharSelectInput('c');
+    const maxSaved = Math.max(...game.state.entities.map((e) => e.id));
+
+    const fresh = createEntity();
+
+    expect(fresh.id).toBeGreaterThan(maxSaved);
   });
 });
