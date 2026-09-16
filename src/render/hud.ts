@@ -6,6 +6,7 @@ import { EQUIP_SLOTS, getAttackBonus, getDefenseBonus } from '../systems/equipme
 import { ABILITIES } from '../data/abilities';
 import { SaveSummary } from '../systems/persistence';
 import { DailyResult } from '../systems/daily';
+import { formatRunCode } from '../systems/runcode';
 import { HitRegion } from '../ui/hit-regions';
 import { canvasHeightFor, getLayout } from './layout';
 
@@ -301,7 +302,9 @@ export function drawCharSelect(
   sprites: SpriteMap,
   resume: SaveSummary | null = null,
   confirmAbandon = false,
-  daily: DailyPanelInfo | null = null
+  daily: DailyPanelInfo | null = null,
+  shared: { code: string; heroIndex: number } | null = null,
+  sharedError = false
 ): HitRegion[] {
   const regions: HitRegion[] = [];
   const L = getLayout();
@@ -409,7 +412,7 @@ export function drawCharSelect(
   if (!L.compact) {
     ctx.fillStyle = COLORS.textDim;
     ctx.font = '12px monospace';
-    ctx.fillText('[Arrow Keys] Select   [Enter] Start', cx, detailY + 84);
+    ctx.fillText('[Arrows] Select', cx, detailY + 84);
   }
 
   // START button (tap target)
@@ -439,6 +442,20 @@ export function drawCharSelect(
     ctx.fillText(`[D] Daily: ${daily.on ? 'ON' : 'OFF'}`, dailyBtn.x + dailyBtn.w / 2, dailyBtn.y + dailyBtn.h / 2);
     regions.push({ ...dailyBtn, action: { type: 'toggleDaily' } });
   }
+
+  // Run code entry (tap target), left of START
+  const codeBtn = L.compact
+    ? { x: startX + gridW - 256, y: detailY + 68, w: 130, h: 26 }
+    : { x: startX + gridW - 278, y: detailY + 66, w: 140, h: 26 };
+  ctx.strokeStyle = shared ? COLORS.stairs : COLORS.textDim;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(codeBtn.x, codeBtn.y, codeBtn.w, codeBtn.h);
+  ctx.fillStyle = shared ? COLORS.stairs : COLORS.textDim;
+  ctx.font = 'bold 12px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('[E] Run code', codeBtn.x + codeBtn.w / 2, codeBtn.y + codeBtn.h / 2);
+  regions.push({ ...codeBtn, action: { type: 'enterRunCode' } });
 
   // Continue banner for a saved run
   if (resume) {
@@ -478,6 +495,22 @@ export function drawCharSelect(
       ? `Already played today: score ${daily.result.score}${daily.result.won ? ' (victory)' : ''}. Come back tomorrow.`
       : 'Same dungeon for everyone. One attempt.';
     ctx.fillText(second, cx, detailY + 168);
+  } else if (shared) {
+    const hero = CHARACTERS[shared.heroIndex];
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = L.compact ? 'bold 12px monospace' : 'bold 14px monospace';
+    ctx.fillStyle = COLORS.stairs;
+    ctx.fillText(`SHARED RUN ${shared.code} \u2014 Hero: ${hero.name}`, cx, detailY + 150);
+    ctx.font = L.compact ? '11px monospace' : '12px monospace';
+    ctx.fillStyle = COLORS.textDim;
+    ctx.fillText('Everyone with this code plays the same dungeon. [Enter] to start.', cx, detailY + 168);
+  } else if (sharedError) {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = L.compact ? 'bold 12px monospace' : 'bold 14px monospace';
+    ctx.fillStyle = '#ff5555';
+    ctx.fillText('Run code not recognised. Codes look like 1z8k3f-7.', cx, detailY + 150);
   }
 
   return regions;
@@ -522,6 +555,13 @@ export function drawGameOver(
   ctx.fillText(`Turns Survived: ${state.turn}`, cx, cy + 50);
   ctx.fillStyle = '#ffd700';
   ctx.fillText(`Gold Collected: ${state.treasureCollected}`, cx, cy + 80);
+
+  // Free-play and shared runs can be replayed from their code
+  if (state.mode !== 'daily') {
+    ctx.fillStyle = COLORS.textDim;
+    ctx.font = '12px monospace';
+    ctx.fillText(`Run code: ${formatRunCode(state.seed, state.heroIndex)}`, cx, cy + 100);
+  }
 
   // High scores
   if (state.highScores.length > 0) {

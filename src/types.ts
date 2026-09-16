@@ -134,7 +134,9 @@ export interface GameState {
   seed: number;
   /** Current generator state; advances on every draw. */
   rngState: number;
-  mode: 'normal' | 'daily';
+  mode: 'normal' | 'daily' | 'shared';
+  /** Index into CHARACTERS of the hero being played; part of the shareable run code. */
+  heroIndex: number;
   /** YYYY-MM-DD (UTC) for daily runs. */
   dailyDate?: string;
   messages: string[];
