@@ -16,6 +16,7 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 - **Treasure** — Gold scattered through every level and dropped by slain monsters; collected automatically as you walk over it
 - **Field of view** — Explore using recursive shadowcasting; what lurks in the dark?
 - **Permadeath** — One life per run. High scores are saved locally
+- **Save & resume** — Your run autosaves every turn; press C on the hero screen to pick up where you left off
 - **Share your runs** — Post your results to Mastodon, Bluesky, or copy to clipboard
 
 ## How to Play
@@ -28,6 +29,7 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 | G | Pick up item |
 | I | Open / close inventory |
 | Q | Use class ability |
+| C | Continue saved run (hero screen) |
 | > | Descend stairs |
 | . | Wait a turn |
 | 1-9, 0 | Use inventory item 1-10 (inventory open) |
@@ -64,6 +66,7 @@ Abilities that find no target (Cleave with nothing adjacent, Arcane Bolt with no
 - Levelling up grants +5 HP and +1 ATK every level, and +1 DEF every second level; deeper monsters have far more HP, so keep upgrading your weapon
 - Drop unwanted items with Shift+number to free up inventory space
 - Your class ability is often the difference in a tough fight; Rogues can Vanish to slip past a room, Scouts can Survey to find the stairs
+- The game saves after every turn, so closing the tab is safe. Dying clears the save, and starting a new hero asks once before erasing it
 - Actions that do nothing (picking up from an empty tile, using an empty slot) do not cost a turn
 - Monsters never fight each other; only you can be attacked
 
@@ -105,7 +108,7 @@ src/
   dungeon/      BSP dungeon generation and population
   ecs/          Entity factory
   render/       Canvas rendering, sprites, HUD, camera
-  systems/      Input, movement, combat, AI, FOV, inventory, equipment, abilities, targeting, scoring
+  systems/      Input, movement, combat, damage, AI, FOV, inventory, equipment, abilities, targeting, persistence, scoring
   constants.ts  Game configuration
   types.ts      Core type definitions
   game.ts       Main game orchestrator
