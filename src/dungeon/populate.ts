@@ -33,6 +33,18 @@ function isFree(state: GameState, x: number, y: number): boolean {
   );
 }
 
+/** Every unoccupied floor tile inside the room, nearest the centre first. */
+function freeTilesInRoom(state: GameState, room: Room): { x: number; y: number }[] {
+  const c = roomCenter(room);
+  const tiles: { x: number; y: number }[] = [];
+  for (let y = room.y; y < room.y + room.h; y++) {
+    for (let x = room.x; x < room.x + room.w; x++) {
+      if (isFree(state, x, y)) tiles.push({ x, y });
+    }
+  }
+  return tiles.sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y));
+}
+
 function placeMonster(
   state: GameState,
   template: MonsterTemplate,
@@ -67,15 +79,14 @@ function spawnBoss(state: GameState, rooms: Room[]): void {
     }
   }
 
-  const center = roomCenter(bossRoom);
-  const bossPos = isFree(state, center.x, center.y) ? center : randomFloorInRoom(state, bossRoom);
-  if (bossPos) {
-    placeMonster(state, BOSS, bossPos, { boss: true });
+  // Deterministic placement: the boss takes the free tile nearest the centre,
+  // the escorts the next two. Runs before regular spawns, so the room is empty.
+  const free = freeTilesInRoom(state, bossRoom);
+  if (free.length > 0) {
+    placeMonster(state, BOSS, free[0], { boss: true });
   }
-
-  for (let i = 0; i < 2; i++) {
-    const pos = randomFloorInRoom(state, bossRoom);
-    if (pos) placeMonster(state, getEscortTemplate(), pos);
+  for (const pos of free.slice(1, 3)) {
+    placeMonster(state, getEscortTemplate(), pos);
   }
 }
 
@@ -85,12 +96,14 @@ export function populateDungeon(state: GameState, rooms: Room[]): void {
   const itemCount = 2 + Math.floor(depth / 2);
   const treasureCount = 2 + Math.floor(depth / 2);
 
+  // The final floor holds the Overlord; place it first so its room is still empty
+  if (depth === BOSS_DEPTH) {
+    spawnBoss(state, rooms);
+  }
+
   // Skip first room (player spawn)
   const spawnRooms = rooms.slice(1);
-  if (spawnRooms.length === 0) {
-    if (depth === BOSS_DEPTH) spawnBoss(state, rooms);
-    return;
-  }
+  if (spawnRooms.length === 0) return;
 
   // Spawn monsters
   for (let i = 0; i < monsterCount; i++) {
@@ -128,10 +141,5 @@ export function populateDungeon(state: GameState, rooms: Room[]): void {
       treasure: { value },
     });
     state.entities.push(treasure);
-  }
-
-  // The final floor holds the Overlord
-  if (depth === BOSS_DEPTH) {
-    spawnBoss(state, rooms);
   }
 }

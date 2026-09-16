@@ -51,24 +51,27 @@ describe('boss data', () => {
 });
 
 describe('final floor population', () => {
-  it('spawns exactly one Overlord and at least two deep escorts', () => {
-    const { dungeon, rooms } = generateDungeon(BOSS_DEPTH);
-    const start = rooms[0];
-    const player = makePlayer(Math.floor(start.x + start.w / 2), Math.floor(start.y + start.h / 2));
-    const state = makeState(player);
-    state.dungeon = dungeon;
-    state.depth = BOSS_DEPTH;
-
-    populateDungeon(state, rooms);
-
-    const bosses = state.entities.filter((e) => e.boss);
-    expect(bosses).toHaveLength(1);
-    expect(bosses[0].appearance!.name).toBe('Overlord');
-    expect(bosses[0].stats!.maxHp).toBe(120);
-
+  it('spawns exactly one Overlord and at least two deep escorts on every generated final floor', () => {
     const deepNames = new Set(MONSTERS.filter((m) => m.minDepth >= 8).map((m) => m.appearance.name));
-    const escorts = state.entities.filter((e) => e.ai && !e.boss && deepNames.has(e.appearance!.name));
-    expect(escorts.length).toBeGreaterThanOrEqual(2);
+
+    for (let run = 0; run < 30; run++) {
+      const { dungeon, rooms } = generateDungeon(BOSS_DEPTH);
+      const start = rooms[0];
+      const player = makePlayer(Math.floor(start.x + start.w / 2), Math.floor(start.y + start.h / 2));
+      const state = makeState(player);
+      state.dungeon = dungeon;
+      state.depth = BOSS_DEPTH;
+
+      populateDungeon(state, rooms);
+
+      const bosses = state.entities.filter((e) => e.boss);
+      expect(bosses, `run ${run}`).toHaveLength(1);
+      expect(bosses[0].appearance!.name).toBe('Overlord');
+      expect(bosses[0].stats!.maxHp).toBe(120);
+
+      const escorts = state.entities.filter((e) => e.ai && !e.boss && deepNames.has(e.appearance!.name));
+      expect(escorts.length, `run ${run}`).toBeGreaterThanOrEqual(2);
+    }
   });
 
   it('spawns no boss above the final floor', () => {
@@ -148,7 +151,8 @@ describe('Game on the final floor', () => {
     expect(game.state.won).toBe(true);
     expect(game.state.gameOver).toBe(true);
     expect(game.state.uiMode).toBe('gameover');
-    expect(game.state.player.stats!.hp).toBe(hpBefore);
+    // Level-ups from the boss XP heal, so HP may rise; it must not have dropped from the escort's 50 ATK.
+    expect(game.state.player.stats!.hp).toBeGreaterThanOrEqual(hpBefore);
     expect(getSaveSummary(storage)).toBeNull();
     expect(game.state.highScores[0]).toBe(game.state.score);
   });
