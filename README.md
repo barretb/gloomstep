@@ -11,7 +11,7 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 - **35 unique monsters** — Enemies scale across 10 depth tiers, from Cave Bugs to Liches
 - **45+ items** — Swords, axes, hammers, bows, armor, shields, helmets, potions, and scrolls
 - **Turn-based combat** — Every move counts; plan your approach carefully
-- **Equipment system** — Equip weapons and armor to boost your stats
+- **Equipment system** — Six gear slots (weapon, body, off-hand, head, hands, legs); bonuses from every equipped piece stack
 - **Treasure** — Gold scattered through every level and dropped by slain monsters; collected automatically as you walk over it
 - **Field of view** — Explore using recursive shadowcasting; what lurks in the dark?
 - **Permadeath** — One life per run. High scores are saved locally
@@ -36,12 +36,13 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 
 - Bump into a monster to attack it
 - Pick up weapons and armor, then open inventory and press their number to equip them
+- Each piece of gear has its own slot: weapons, body armor, shields (off-hand), helmets (head), gauntlets (hands), and greaves (legs). Equipping into an occupied slot swaps the old piece back into your pack
 - Potions are consumed immediately when used; weapons and armor are equipped
 - Walk over gold (`$`) to collect it automatically — it adds to your score
 - Monsters have a chance to drop gold when slain; deeper monsters drop more
 - Find the stairs down (`>`) to descend to the next depth
 - Deeper floors have tougher monsters but better loot and more valuable treasure
-- Check your inventory to see how equipment affects your ATK and DEF stats
+- Check your inventory to see every slot and how your combined equipment affects your ATK and DEF stats
 - Drop unwanted items with Shift+number to free up inventory space
 - Actions that do nothing (picking up from an empty tile, using an empty slot) do not cost a turn
 - Monsters never fight each other; only you can be attacked
@@ -84,7 +85,7 @@ src/
   dungeon/      BSP dungeon generation and population
   ecs/          Entity factory
   render/       Canvas rendering, sprites, HUD, camera
-  systems/      Input, movement, combat, AI, FOV, inventory, scoring
+  systems/      Input, movement, combat, AI, FOV, inventory, equipment, scoring
   constants.ts  Game configuration
   types.ts      Core type definitions
   game.ts       Main game orchestrator

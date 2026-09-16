@@ -1,5 +1,6 @@
-import { DungeonLevel, Entity, GameState, Stats, Tile } from '../src/types';
+import { DungeonLevel, Entity, EquipSlot, GameState, Stats, Tile } from '../src/types';
 import { createEntity, resetEntityIds } from '../src/ecs/entity';
+import { createEmptyEquipment } from '../src/systems/equipment';
 
 const BASE_STATS: Stats = { hp: 20, maxHp: 20, attack: 5, defense: 1, level: 1, xp: 0, xpToNext: 20 };
 
@@ -23,7 +24,19 @@ export function makePlayer(x: number, y: number, stats: Partial<Stats> = {}): En
     player: true,
     blocksMovement: true,
     inventory: { items: [], capacity: 10 },
-    equipment: { weapon: null, armor: null },
+    equipment: createEmptyEquipment(),
+  });
+}
+
+/** An equippable item entity (not on the map). */
+export function makeGear(
+  name: string,
+  slot: EquipSlot,
+  bonus: { attackBonus?: number; defenseBonus?: number }
+): Entity {
+  return createEntity({
+    appearance: { name, char: slot === 'weapon' ? '/' : '[', color: '#ccc', sprite: name.toLowerCase() },
+    item: { kind: slot === 'weapon' ? 'weapon' : 'armor', slot, ...bonus },
   });
 }
 
