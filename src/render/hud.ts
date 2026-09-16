@@ -1,4 +1,4 @@
-import { COLORS, TILE_SIZE } from '../constants';
+import { COLORS, TILE_SIZE, BOSS_DEPTH } from '../constants';
 import { GameState } from '../types';
 import { CHARACTERS } from '../data/characters';
 import { SpriteMap } from './sprite-loader';
@@ -67,7 +67,13 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
   const statsX = barX + barW + 20;
   const col = L.compact ? 95 : 100;
   ctx.fillStyle = COLORS.text;
-  ctx.fillText(`Depth: ${state.depth}`, statsX, barY + 8);
+  if (state.depth >= BOSS_DEPTH) {
+    ctx.fillStyle = '#ffd700';
+    ctx.fillText(`Depth: ${state.depth} (final)`, statsX, barY + 8);
+    ctx.fillStyle = COLORS.text;
+  } else {
+    ctx.fillText(`Depth: ${state.depth}`, statsX, barY + 8);
+  }
   ctx.fillText(`Level: ${stats.level}`, statsX, barY + 24);
   ctx.fillText(`ATK: ${stats.attack}${atkBonus ? '+' + atkBonus : ''}`, statsX + col, barY + 8);
   ctx.fillText(`DEF: ${stats.defense}${defBonus ? '+' + defBonus : ''}`, statsX + col, barY + 24);
@@ -449,10 +455,18 @@ export function drawGameOver(
   ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
   ctx.fillRect(0, 0, L.mapW, H);
 
-  ctx.fillStyle = '#cc3333';
   ctx.font = 'bold 36px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('GAME OVER', cx, cy - 60);
+  if (state.won) {
+    ctx.fillStyle = '#ffcc00';
+    ctx.fillText('VICTORY', cx, cy - 60);
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '14px monospace';
+    ctx.fillText(`You slew the Overlord on depth ${BOSS_DEPTH}.`, cx, cy - 30);
+  } else {
+    ctx.fillStyle = '#cc3333';
+    ctx.fillText('GAME OVER', cx, cy - 60);
+  }
 
   ctx.fillStyle = COLORS.textBright;
   ctx.font = '18px monospace';

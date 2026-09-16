@@ -75,6 +75,7 @@ export function loadRun(storage: RunStorage = defaultStorage()): GameState | nul
   if (!state) return null;
   state.player = state.entities.find((e) => e.player)!;
   state.uiMode = 'game';
+  state.won = state.won ?? false;
   return state;
 }
 

@@ -1,4 +1,5 @@
 import { Action, GameState, Tile } from './types';
+import { BOSS_DEPTH } from './constants';
 import { createEntity, resetEntityIds, setNextEntityId } from './ecs/entity';
 import { generateDungeon } from './dungeon/generator';
 import { populateDungeon } from './dungeon/populate';
@@ -70,6 +71,7 @@ export class Game {
       treasureCollected: 0,
       turn: 0,
       gameOver: false,
+      won: false,
       messages: [],
       uiMode: 'charselect',
       highScores: loadHighScores(),
@@ -172,6 +174,7 @@ export class Game {
       treasureCollected: 0,
       turn: 0,
       gameOver: false,
+      won: false,
       messages: [`${template.name} enters the dungeon...`],
       uiMode: 'game',
       highScores: loadHighScores(),
@@ -247,31 +250,45 @@ export class Game {
   private endTurn(): void {
     this.state.turn++;
 
+    // Victory is decided by the player's own action; the monsters get no reply.
+    if (this.state.won && !this.state.gameOver) {
+      this.finishRun();
+      return;
+    }
+
     runAI(this.state);
     tickAbilities(this.state);
     computeFOV(this.state);
-
-    const died = this.state.player.stats!.hp <= 0 && !this.state.gameOver;
-    if (died) {
-      this.state.gameOver = true;
-      this.state.uiMode = 'gameover';
-      this.state.highScores = saveHighScore(this.state.score);
-    }
 
     if (this.state.messages.length > 50) {
       this.state.messages = this.state.messages.slice(-50);
     }
 
-    if (died) {
-      clearRun(this.storage);
-    } else {
-      saveRun(this.state, this.storage);
+    if (this.state.player.stats!.hp <= 0 && !this.state.gameOver) {
+      this.finishRun();
+      return;
     }
 
+    saveRun(this.state, this.storage);
+    this.draw();
+  }
+
+  /** Ends the run, in victory or death: records the score and clears the autosave. */
+  private finishRun(): void {
+    this.state.gameOver = true;
+    this.state.uiMode = 'gameover';
+    this.state.highScores = saveHighScore(this.state.score);
+    clearRun(this.storage);
     this.draw();
   }
 
   private tryDescend(): void {
+    if (this.state.depth >= BOSS_DEPTH) {
+      this.state.messages.push("The way down is sealed. Only the Overlord's fall can end this.");
+      this.draw();
+      return;
+    }
+
     const pos = this.state.player.position!;
     if (this.state.dungeon.tiles[pos.y][pos.x] !== Tile.StairsDown) {
       this.state.messages.push('No stairs here.');
@@ -433,12 +450,16 @@ export class Game {
     const s = this.state;
     const stats = s.player.stats!;
     const name = s.player.appearance?.name ?? 'Adventurer';
+    const title = s.won
+      ? `\u{1F3C6} Gloomstep Dungeon \u2014 CONQUERED \u{1F3C6}`
+      : `\u2694\uFE0F Gloomstep Dungeon \u2694\uFE0F`;
+    const challenge = s.won ? 'I slew the Overlord. Can you?' : 'Can you survive the dungeon?';
     return [
-      `\u2694\uFE0F Gloomstep Dungeon \u2694\uFE0F`,
+      title,
       `Score: ${s.score} | Depth: ${s.depth} | Level: ${stats.level}`,
       `Turns Survived: ${s.turn}`,
       `Character: ${name}`,
-      `Can you survive the dungeon?`,
+      challenge,
       GAME_URL,
       `#GloomstepDungeon #roguelike`,
     ].join('\n');

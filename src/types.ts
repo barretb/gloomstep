@@ -87,6 +87,8 @@ export interface Entity {
   player?: true;
   blocksMovement?: true;
   xpValue?: number;
+  /** The floor boss; slaying it wins the run. */
+  boss?: true;
 }
 
 export enum Tile {
@@ -124,6 +126,7 @@ export interface GameState {
   treasureCollected: number;
   turn: number;
   gameOver: boolean;
+  won: boolean;
   messages: string[];
   uiMode: UIMode;
   highScores: number[];

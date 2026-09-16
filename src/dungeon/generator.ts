@@ -1,4 +1,4 @@
-import { MAP_W, MAP_H } from '../constants';
+import { MAP_W, MAP_H, BOSS_DEPTH } from '../constants';
 import { DungeonLevel, Room, Tile } from '../types';
 
 interface BSPNode {
@@ -165,8 +165,8 @@ export function generateDungeon(depth: number): { dungeon: DungeonLevel; rooms: 
     }
   }
 
-  // Place stairs in the last room
-  if (rooms.length > 1) {
+  // Place stairs in the last room (the final floor has no way down)
+  if (rooms.length > 1 && depth < BOSS_DEPTH) {
     const lastRoom = rooms[rooms.length - 1];
     const center = roomCenter(lastRoom);
     tiles[center.y][center.x] = Tile.StairsDown;

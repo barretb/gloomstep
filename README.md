@@ -16,6 +16,7 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 - **Treasure** — Gold scattered through every level and dropped by slain monsters; collected automatically as you walk over it
 - **Field of view** — Explore using recursive shadowcasting; what lurks in the dark?
 - **Permadeath** — One life per run. High scores are saved locally
+- **A final floor** — Depth 10 has no way down; slay the Overlord to win
 - **Save & resume** — Your run autosaves every turn; press C on the hero screen to pick up where you left off
 - **Touch controls & phone layout** — Play on a phone or tablet with an on-screen d-pad and tappable menus; narrow screens get a 15×13 map and single-column menus
 - **Share your runs** — Post your results to Mastodon, Bluesky, or copy to clipboard
@@ -68,11 +69,12 @@ Below 600 pixels of width the game switches to a compact layout: the map shows 1
 - Walk over gold (`$`) to collect it automatically — it adds to your score
 - Monsters have a chance to drop gold when slain; deeper monsters drop more
 - Find the stairs down (`>`) to descend to the next depth
-- Deeper floors have tougher monsters but better loot and more valuable treasure. Newly unlocked gear is the most common find, and weapons or armor from six or more floors up stop appearing entirely. Potions and scrolls always stay in the loot pool
+- Deeper floors have tougher monsters but better loot and more valuable treasure. Newly unlocked gear is the most common find, and weapons or armor from six or more floors up stop appearing entirely. Potions and scrolls always stay in the loot pool. Depth 10 is the final floor: there are no stairs down, and the run ends in victory when the Overlord falls
 - Check your inventory to see every slot and how your combined equipment affects your ATK and DEF stats
 - Levelling up grants +5 HP and +1 ATK every level, and +1 DEF every second level; deeper monsters have far more HP, so keep upgrading your weapon
 - Drop unwanted items with Shift+number to free up inventory space
 - Your class ability is often the difference in a tough fight; Rogues can Vanish to slip past a room, Scouts can Survey to find the stairs
+- The Overlord waits in the room farthest from where you arrive on depth 10, guarded by two deep-floor monsters. Buff up, bring potions, and open with your ability
 - The game saves after every turn, so closing the tab is safe. Dying clears the save, and starting a new hero asks once before erasing it
 - Actions that do nothing (picking up from an empty tile, using an empty slot) do not cost a turn
 - Monsters never fight each other; only you can be attacked
