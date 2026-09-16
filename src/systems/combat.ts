@@ -1,13 +1,12 @@
 import { Entity, GameState } from '../types';
 import { createEntity } from '../ecs/entity';
 import { getAttackPower, getDefensePower } from './equipment';
+import { computeDamage } from './damage';
 
 export function resolveCombat(state: GameState, attacker: Entity, defender: Entity): void {
   if (!attacker.stats || !defender.stats) return;
 
-  const atk = getAttackPower(attacker);
-  const def = getDefensePower(defender);
-  const damage = Math.max(1, atk - def);
+  const damage = computeDamage(getAttackPower(attacker), getDefensePower(defender));
 
   defender.stats.hp -= damage;
 
@@ -67,7 +66,10 @@ function checkLevelUp(state: GameState, entity: Entity): void {
     entity.stats.maxHp += 5;
     entity.stats.hp = Math.min(entity.stats.hp + 5, entity.stats.maxHp);
     entity.stats.attack += 1;
-    entity.stats.defense += 1;
+    // Defense grows every second level so monsters keep hurting at depth.
+    if (entity.stats.level % 2 === 0) {
+      entity.stats.defense += 1;
+    }
     entity.stats.xpToNext = Math.floor(entity.stats.xpToNext * 1.5);
     state.messages.push(`You reached level ${entity.stats.level}!`);
   }

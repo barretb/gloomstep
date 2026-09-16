@@ -10,7 +10,7 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 - **15 playable characters** — Choose from Humans, Elves, Dwarves, and Drow across classes like Warrior, Mage, Rogue, and more
 - **35 unique monsters** — Enemies scale across 10 depth tiers, from Cave Bugs to Liches
 - **45+ items** — Swords, axes, hammers, bows, armor, shields, helmets, potions, and scrolls
-- **Turn-based combat** — Every move counts; plan your approach carefully
+- **Turn-based combat** — Every move counts; plan your approach carefully. Defense mitigates damage proportionally, so armor always helps but never makes you immune
 - **Equipment system** — Six gear slots (weapon, body, off-hand, head, hands, legs); bonuses from every equipped piece stack
 - **Class abilities** — Every class has a signature ability on a turn cooldown, fired with Q
 - **Treasure** — Gold scattered through every level and dropped by slain monsters; collected automatically as you walk over it
@@ -52,7 +52,7 @@ Abilities that find no target (Cleave with nothing adjacent, Arcane Bolt with no
 
 ### Tips
 
-- Bump into a monster to attack it
+- Bump into a monster to attack it. Damage is your ATK scaled down by the target's DEF (equal DEF halves a hit) with a small random swing, and a hit always does at least 1
 - Pick up weapons and armor, then open inventory and press their number to equip them
 - Each piece of gear has its own slot: weapons, body armor, shields (off-hand), helmets (head), gauntlets (hands), and greaves (legs). Equipping into an occupied slot swaps the old piece back into your pack
 - Potions are consumed immediately when used; weapons and armor are equipped
@@ -61,6 +61,7 @@ Abilities that find no target (Cleave with nothing adjacent, Arcane Bolt with no
 - Find the stairs down (`>`) to descend to the next depth
 - Deeper floors have tougher monsters but better loot and more valuable treasure. Newly unlocked gear is the most common find, and weapons or armor from six or more floors up stop appearing entirely. Potions and scrolls always stay in the loot pool
 - Check your inventory to see every slot and how your combined equipment affects your ATK and DEF stats
+- Levelling up grants +5 HP and +1 ATK every level, and +1 DEF every second level; deeper monsters have far more HP, so keep upgrading your weapon
 - Drop unwanted items with Shift+number to free up inventory space
 - Your class ability is often the difference in a tough fight; Rogues can Vanish to slip past a room, Scouts can Survey to find the stairs
 - Actions that do nothing (picking up from an empty tile, using an empty slot) do not cost a turn

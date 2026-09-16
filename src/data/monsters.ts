@@ -9,7 +9,7 @@ export interface MonsterTemplate {
   minDepth: number;
 }
 
-const MONSTERS: MonsterTemplate[] = [
+export const MONSTERS: MonsterTemplate[] = [
   // -- Depth 1: Early vermin & critters --
   {
     appearance: { name: 'Cave Bug', char: 'b', color: '#668844', sprite: 'cave_bug' },
@@ -129,28 +129,28 @@ const MONSTERS: MonsterTemplate[] = [
   // -- Depth 5: Serious threats --
   {
     appearance: { name: 'Troll', char: 'T', color: '#228822', sprite: 'troll' },
-    stats: { hp: 24, maxHp: 24, attack: 8, defense: 3, level: 5, xp: 0, xpToNext: 0 },
+    stats: { hp: 34, maxHp: 34, attack: 8, defense: 3, level: 5, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 5 },
     xpValue: 35,
     minDepth: 5,
   },
   {
     appearance: { name: 'Werewolf', char: 'W', color: '#887766', sprite: 'werewolf' },
-    stats: { hp: 20, maxHp: 20, attack: 9, defense: 2, level: 5, xp: 0, xpToNext: 0 },
+    stats: { hp: 28, maxHp: 28, attack: 9, defense: 2, level: 5, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 8 },
     xpValue: 35,
     minDepth: 5,
   },
   {
     appearance: { name: 'Lurker', char: 'L', color: '#556688', sprite: 'lurker' },
-    stats: { hp: 18, maxHp: 18, attack: 8, defense: 3, level: 5, xp: 0, xpToNext: 0 },
+    stats: { hp: 25, maxHp: 25, attack: 8, defense: 3, level: 5, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 4 },
     xpValue: 30,
     minDepth: 5,
   },
   {
     appearance: { name: 'Minion', char: 'm', color: '#884488', sprite: 'minion' },
-    stats: { hp: 14, maxHp: 14, attack: 7, defense: 2, level: 5, xp: 0, xpToNext: 0 },
+    stats: { hp: 20, maxHp: 20, attack: 7, defense: 2, level: 5, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 7 },
     xpValue: 25,
     minDepth: 5,
@@ -158,28 +158,28 @@ const MONSTERS: MonsterTemplate[] = [
   // -- Depth 6: Dangerous elites --
   {
     appearance: { name: 'Ghost', char: 'G', color: '#8888cc', sprite: 'ghost' },
-    stats: { hp: 16, maxHp: 16, attack: 10, defense: 1, level: 6, xp: 0, xpToNext: 0 },
+    stats: { hp: 22, maxHp: 22, attack: 10, defense: 1, level: 6, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 10 },
     xpValue: 40,
     minDepth: 6,
   },
   {
     appearance: { name: 'Cyclops', char: 'C', color: '#aa8866', sprite: 'cyclop' },
-    stats: { hp: 28, maxHp: 28, attack: 10, defense: 3, level: 6, xp: 0, xpToNext: 0 },
+    stats: { hp: 39, maxHp: 39, attack: 10, defense: 3, level: 6, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 5 },
     xpValue: 45,
     minDepth: 6,
   },
   {
     appearance: { name: 'Stone Spirit', char: 'S', color: '#888899', sprite: 'stone_spirit' },
-    stats: { hp: 22, maxHp: 22, attack: 8, defense: 5, level: 6, xp: 0, xpToNext: 0 },
+    stats: { hp: 31, maxHp: 31, attack: 8, defense: 5, level: 6, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 5 },
     xpValue: 40,
     minDepth: 6,
   },
   {
     appearance: { name: 'Yeti', char: 'Y', color: '#aabbcc', sprite: 'yeti' },
-    stats: { hp: 26, maxHp: 26, attack: 9, defense: 4, level: 6, xp: 0, xpToNext: 0 },
+    stats: { hp: 36, maxHp: 36, attack: 9, defense: 4, level: 6, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 6 },
     xpValue: 42,
     minDepth: 6,
@@ -187,28 +187,28 @@ const MONSTERS: MonsterTemplate[] = [
   // -- Depth 7: Deadly --
   {
     appearance: { name: 'Marsh Howler', char: 'M', color: '#448866', sprite: 'marsh_howler' },
-    stats: { hp: 24, maxHp: 24, attack: 11, defense: 3, level: 7, xp: 0, xpToNext: 0 },
+    stats: { hp: 34, maxHp: 34, attack: 11, defense: 3, level: 7, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 8 },
     xpValue: 50,
     minDepth: 7,
   },
   {
     appearance: { name: 'Swarm Soldier', char: 'S', color: '#886644', sprite: 'swarm_soldier' },
-    stats: { hp: 20, maxHp: 20, attack: 10, defense: 4, level: 7, xp: 0, xpToNext: 0 },
+    stats: { hp: 28, maxHp: 28, attack: 10, defense: 4, level: 7, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 7 },
     xpValue: 45,
     minDepth: 7,
   },
   {
     appearance: { name: 'Devourer', char: 'D', color: '#aa4466', sprite: 'devourer' },
-    stats: { hp: 22, maxHp: 22, attack: 12, defense: 2, level: 7, xp: 0, xpToNext: 0 },
+    stats: { hp: 31, maxHp: 31, attack: 12, defense: 2, level: 7, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 6 },
     xpValue: 50,
     minDepth: 7,
   },
   {
     appearance: { name: 'Metal Golem', char: 'G', color: '#888899', sprite: 'metal_golem' },
-    stats: { hp: 30, maxHp: 30, attack: 9, defense: 6, level: 7, xp: 0, xpToNext: 0 },
+    stats: { hp: 42, maxHp: 42, attack: 9, defense: 6, level: 7, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 4 },
     xpValue: 50,
     minDepth: 7,
@@ -216,28 +216,28 @@ const MONSTERS: MonsterTemplate[] = [
   // -- Depth 8: Hellish --
   {
     appearance: { name: 'Demon Soldier', char: 'D', color: '#cc3333', sprite: 'demon_soldier' },
-    stats: { hp: 28, maxHp: 28, attack: 12, defense: 4, level: 8, xp: 0, xpToNext: 0 },
+    stats: { hp: 39, maxHp: 39, attack: 12, defense: 4, level: 8, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 7 },
     xpValue: 60,
     minDepth: 8,
   },
   {
     appearance: { name: 'Magma Demon', char: 'M', color: '#ff6622', sprite: 'magma_demon' },
-    stats: { hp: 26, maxHp: 26, attack: 14, defense: 3, level: 8, xp: 0, xpToNext: 0 },
+    stats: { hp: 36, maxHp: 36, attack: 14, defense: 3, level: 8, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 6 },
     xpValue: 65,
     minDepth: 8,
   },
   {
     appearance: { name: 'Forest Keeper', char: 'F', color: '#44aa44', sprite: 'forest_keeper' },
-    stats: { hp: 32, maxHp: 32, attack: 11, defense: 5, level: 8, xp: 0, xpToNext: 0 },
+    stats: { hp: 45, maxHp: 45, attack: 11, defense: 5, level: 8, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 6 },
     xpValue: 60,
     minDepth: 8,
   },
   {
     appearance: { name: 'Hermit', char: 'H', color: '#aa8844', sprite: 'hermit' },
-    stats: { hp: 20, maxHp: 20, attack: 13, defense: 2, level: 8, xp: 0, xpToNext: 0 },
+    stats: { hp: 28, maxHp: 28, attack: 13, defense: 2, level: 8, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 9 },
     xpValue: 55,
     minDepth: 8,
@@ -245,21 +245,21 @@ const MONSTERS: MonsterTemplate[] = [
   // -- Depth 9+: Bosses & endgame --
   {
     appearance: { name: 'Lich', char: 'L', color: '#aa44ff', sprite: 'lich' },
-    stats: { hp: 30, maxHp: 30, attack: 14, defense: 4, level: 9, xp: 0, xpToNext: 0 },
+    stats: { hp: 42, maxHp: 42, attack: 14, defense: 4, level: 9, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 10 },
     xpValue: 75,
     minDepth: 9,
   },
   {
     appearance: { name: 'Abomination', char: 'A', color: '#884466', sprite: 'abomination' },
-    stats: { hp: 36, maxHp: 36, attack: 13, defense: 5, level: 9, xp: 0, xpToNext: 0 },
+    stats: { hp: 50, maxHp: 50, attack: 13, defense: 5, level: 9, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 6 },
     xpValue: 80,
     minDepth: 9,
   },
   {
     appearance: { name: 'Overlord', char: 'O', color: '#cc2222', sprite: 'overlord' },
-    stats: { hp: 40, maxHp: 40, attack: 15, defense: 5, level: 10, xp: 0, xpToNext: 0 },
+    stats: { hp: 56, maxHp: 56, attack: 15, defense: 5, level: 10, xp: 0, xpToNext: 0 },
     ai: { type: 'chase', alertRange: 8 },
     xpValue: 100,
     minDepth: 10,
