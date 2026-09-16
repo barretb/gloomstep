@@ -1,6 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { moveEntity } from '../src/systems/movement';
 import { makeMonster, makePlayer, makeState } from './helpers';
+
+beforeEach(() => {
+  // Pin the damage roll to 100% so expected values are exact.
+  vi.spyOn(Math, 'random').mockReturnValue(0.5);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('moveEntity', () => {
   it('does not let a monster attack another monster it bumps into', () => {

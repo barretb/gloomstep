@@ -1,7 +1,16 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { tickAbilities, useAbility } from '../src/systems/abilities';
 import { getAttackPower, getDefensePower } from '../src/systems/equipment';
 import { giveAbility, makeDungeon, makeMonster, makePlayer, makeState } from './helpers';
+
+beforeEach(() => {
+  // Pin the damage roll to 100% so Cleave's expected values are exact.
+  vi.spyOn(Math, 'random').mockReturnValue(0.5);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('useAbility cooldown', () => {
   it('starts the cooldown when the ability fires', () => {
