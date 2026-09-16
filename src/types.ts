@@ -113,9 +113,12 @@ export type Action =
   | { type: 'dropItem'; index: number }
   | { type: 'descend' }
   | { type: 'ability' }
-  | { type: 'toggleInventory' };
+  | { type: 'toggleInventory' }
+  | { type: 'toggleLog' }
+  /** Positive scrolls toward older messages; Infinity jumps to the oldest, -Infinity to the newest. */
+  | { type: 'scrollLog'; by: number };
 
-export type UIMode = 'charselect' | 'game' | 'inventory' | 'gameover';
+export type UIMode = 'charselect' | 'game' | 'inventory' | 'log' | 'gameover';
 
 export interface GameState {
   dungeon: DungeonLevel;

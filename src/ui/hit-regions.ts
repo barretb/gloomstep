@@ -5,6 +5,8 @@ export type TapAction =
   | { type: 'useItem'; index: number }
   | { type: 'dropItem'; index: number }
   | { type: 'closeInventory' }
+  | { type: 'closeLog' }
+  | { type: 'scrollLog'; by: number }
   | { type: 'share'; target: 'm' | 'b' | 'c' }
   | { type: 'playAgain' };
 

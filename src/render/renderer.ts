@@ -6,8 +6,15 @@ import { drawTile, drawEntity } from './sprites';
 import { drawHud, drawInventoryScreen, drawGameOver } from './hud';
 import { SpriteMap } from './sprite-loader';
 import { HitRegion } from '../ui/hit-regions';
+import { drawMessageLog } from './log';
 
-export function render(ctx: CanvasRenderingContext2D, state: GameState, sprites: SpriteMap, shareStatus: string = ''): HitRegion[] {
+export function render(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  sprites: SpriteMap,
+  shareStatus: string = '',
+  logScroll: number = 0
+): HitRegion[] {
   const L = getLayout();
   const cam = getCamera(state);
 
@@ -67,6 +74,9 @@ export function render(ctx: CanvasRenderingContext2D, state: GameState, sprites:
   // Draw overlays; whichever is active reports its tap regions
   if (state.uiMode === 'inventory') {
     return drawInventoryScreen(ctx, state);
+  }
+  if (state.uiMode === 'log') {
+    return drawMessageLog(ctx, state, logScroll);
   }
   if (state.uiMode === 'gameover') {
     return drawGameOver(ctx, state, shareStatus);

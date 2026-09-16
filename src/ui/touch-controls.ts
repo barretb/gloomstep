@@ -14,6 +14,7 @@ export function parseControlAction(value: string): Action | null {
     case 'wait':
     case 'pickup':
     case 'toggleInventory':
+    case 'toggleLog':
     case 'ability':
     case 'descend':
       return { type: value };
@@ -28,7 +29,7 @@ function isStep(n: number): boolean {
 
 /** The on-screen controls only make sense while a run is in progress. */
 export function controlBarVisible(mode: UIMode): boolean {
-  return mode === 'game' || mode === 'inventory';
+  return mode === 'game' || mode === 'inventory' || mode === 'log';
 }
 
 /** Routes taps on the control bar's buttons to the game. */
