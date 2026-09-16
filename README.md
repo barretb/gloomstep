@@ -15,6 +15,7 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 - **Class abilities** — Every class has a signature ability on a turn cooldown, fired with Q
 - **Treasure** — Gold scattered through every level and dropped by slain monsters; collected automatically as you walk over it
 - **Field of view** — Explore using recursive shadowcasting; what lurks in the dark?
+- **Message log** — The last 200 messages, scrollable with L
 - **Permadeath** — One life per run. High scores are saved locally
 - **A final floor** — Depth 10 has no way down; slay the Overlord to win
 - **Save & resume** — Your run autosaves every turn; press C on the hero screen to pick up where you left off
@@ -31,6 +32,7 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 | G | Pick up item |
 | I | Open / close inventory |
 | Q | Use class ability |
+| L | Open / close the message log (arrows or W/S scroll, PgUp/PgDn page, Home/End jump) |
 | C | Continue saved run (hero screen) |
 | > | Descend stairs |
 | . | Wait a turn |
@@ -56,7 +58,7 @@ Abilities that find no target (Cleave with nothing adjacent, Arcane Bolt with no
 
 ### Touch Controls
 
-On touch devices an on-screen d-pad (with wait in the centre) and Grab, Bag, Skill, and Descend buttons appear under the map. Every other screen is tappable too: tap a hero card and then **START** on the hero screen (or the Continue banner to resume), tap an inventory row to use it or its `[drop]` label to drop it, tap the close mark or outside the panel to close the inventory, and tap the share options or "play again" on the game over screen.
+On touch devices an on-screen d-pad (with wait in the centre) and Grab, Bag, Skill, Descend, and Log buttons appear under the map. While the log is open the d-pad scrolls it. Every other screen is tappable too: tap a hero card and then **START** on the hero screen (or the Continue banner to resume), tap an inventory row to use it or its `[drop]` label to drop it, tap the close mark or outside the panel to close the inventory, and tap the share options or "play again" on the game over screen.
 
 Below 600 pixels of width the game switches to a compact layout: the map shows 15×13 tiles with a reflowed HUD, and the hero, inventory, and game over screens use a taller single-column canvas. Rotating or resizing switches layouts without losing your run.
 

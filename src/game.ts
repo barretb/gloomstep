@@ -25,6 +25,7 @@ import { CHARACTERS, CharacterTemplate } from './data/characters';
 import { drawCharSelect } from './render/hud';
 import { findHitRegion, HitRegion, TapAction } from './ui/hit-regions';
 import { canvasHeightFor, getLayout } from './render/layout';
+import { LOG_CAPACITY, logVisibleLines } from './render/log';
 
 export class Game {
   state!: GameState;
@@ -37,6 +38,8 @@ export class Game {
   confirmAbandon = false;
   /** Tappable regions of whatever is currently drawn. */
   hitRegions: HitRegion[] = [];
+  /** Message log scroll position: lines back from the newest message. */
+  logScroll = 0;
 
   constructor(ctx: CanvasRenderingContext2D, sprites: SpriteMap, storage: RunStorage = defaultStorage()) {
     this.ctx = ctx;
@@ -189,6 +192,28 @@ export class Game {
     if (this.state.gameOver) return;
 
     // Handle UI-only actions
+    if (action.type === 'toggleLog') {
+      this.state.uiMode = this.state.uiMode === 'log' ? 'game' : 'log';
+      this.logScroll = 0;
+      this.draw();
+      return;
+    }
+
+    if (action.type === 'scrollLog') {
+      this.scrollLog(action.by);
+      this.draw();
+      return;
+    }
+
+    // While the log is open the d-pad scrolls it and nothing else acts
+    if (this.state.uiMode === 'log') {
+      if (action.type === 'move') {
+        this.scrollLog(-action.dy);
+      }
+      this.draw();
+      return;
+    }
+
     if (action.type === 'toggleInventory') {
       this.state.uiMode = this.state.uiMode === 'inventory' ? 'game' : 'inventory';
       this.draw();
@@ -260,8 +285,8 @@ export class Game {
     tickAbilities(this.state);
     computeFOV(this.state);
 
-    if (this.state.messages.length > 50) {
-      this.state.messages = this.state.messages.slice(-50);
+    if (this.state.messages.length > LOG_CAPACITY) {
+      this.state.messages = this.state.messages.slice(-LOG_CAPACITY);
     }
 
     if (this.state.player.stats!.hp <= 0 && !this.state.gameOver) {
@@ -342,6 +367,13 @@ export class Game {
     }
   }
 
+  /** Moves the log view by `by` lines toward older messages, clamped to the history. */
+  private scrollLog(by: number): void {
+    const max = Math.max(0, this.state.messages.length - logVisibleLines(getLayout()));
+    const next = this.logScroll + by;
+    this.logScroll = Math.min(max, Math.max(0, Number.isFinite(next) ? next : next > 0 ? max : 0));
+  }
+
   /** Dispatches a tap at canvas pixel (x, y) to whatever was drawn there. */
   handleTap(x: number, y: number): void {
     const region = findHitRegion(this.hitRegions, x, y);
@@ -372,6 +404,14 @@ export class Game {
         if (this.state.uiMode === 'inventory') {
           this.tick({ type: 'toggleInventory' });
         }
+        return;
+      case 'closeLog':
+        if (this.state.uiMode === 'log') {
+          this.tick({ type: 'toggleLog' });
+        }
+        return;
+      case 'scrollLog':
+        this.tick({ type: 'scrollLog', by: action.by });
         return;
       case 'share':
         this.handleGameOverInput(action.target);
@@ -467,7 +507,7 @@ export class Game {
 
   draw(): void {
     this.ensureCanvasSize();
-    this.hitRegions = render(this.ctx, this.state, this.sprites, this.shareStatus);
+    this.hitRegions = render(this.ctx, this.state, this.sprites, this.shareStatus, this.logScroll);
   }
 }
 

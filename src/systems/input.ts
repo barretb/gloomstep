@@ -1,4 +1,5 @@
 import { Action, UIMode } from '../types';
+import { LOG_PAGE } from '../render/log';
 
 export function setupInput(onAction: (action: Action) => void, getUIMode: () => UIMode): void {
   window.addEventListener('keydown', (e) => {
@@ -13,6 +14,33 @@ export function setupInput(onAction: (action: Action) => void, getUIMode: () => 
 export function keyToAction(key: string, mode: UIMode): Action | null {
   if (mode === 'gameover' || mode === 'charselect') {
     return null; // handled separately
+  }
+
+  if (mode === 'log') {
+    switch (key) {
+      case 'l':
+      case 'L':
+      case 'Escape':
+        return { type: 'toggleLog' };
+      case 'ArrowUp':
+      case 'w':
+      case 'W':
+        return { type: 'scrollLog', by: 1 };
+      case 'ArrowDown':
+      case 's':
+      case 'S':
+        return { type: 'scrollLog', by: -1 };
+      case 'PageUp':
+        return { type: 'scrollLog', by: LOG_PAGE };
+      case 'PageDown':
+        return { type: 'scrollLog', by: -LOG_PAGE };
+      case 'Home':
+        return { type: 'scrollLog', by: Infinity };
+      case 'End':
+        return { type: 'scrollLog', by: -Infinity };
+      default:
+        return null;
+    }
   }
 
   if (mode === 'inventory') {
@@ -61,6 +89,9 @@ export function keyToAction(key: string, mode: UIMode): Action | null {
     case 'i':
     case 'I':
       return { type: 'toggleInventory' };
+    case 'l':
+    case 'L':
+      return { type: 'toggleLog' };
     case 'q':
     case 'Q':
       return { type: 'ability' };
