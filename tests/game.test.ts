@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { afterEach, describe, it, expect, beforeEach } from 'vitest';
+import { COMPACT_LAYOUT, DESKTOP_LAYOUT, setLayout } from '../src/render/layout';
 import { Game } from '../src/game';
 import { createEntity } from '../src/ecs/entity';
 import { createMemoryStorage, getSaveSummary, RunStorage } from '../src/systems/persistence';
@@ -254,5 +255,49 @@ describe('Game.handleTap', () => {
 
     expect(game.state.uiMode).toBe('game');
     expect(game.state.turn).toBe(turn);
+  });
+});
+
+describe('Game canvas sizing', () => {
+  afterEach(() => setLayout(DESKTOP_LAYOUT));
+
+  function canvasOf(game: Game): { width: number; height: number } {
+    return (game.ctx as unknown as { canvas: { width: number; height: number } }).canvas;
+  }
+
+  it('uses 800 by 728 for every screen on desktop', () => {
+    const { ctx } = makeCtx();
+    const game = new Game(ctx, new Map(), createMemoryStorage());
+    expect(canvasOf(game)).toEqual({ width: 800, height: 728 });
+
+    game.handleCharSelectInput('Enter');
+    expect(canvasOf(game)).toEqual({ width: 800, height: 728 });
+  });
+
+  it('uses the menu height on the hero screen and map plus HUD in play on compact', () => {
+    setLayout(COMPACT_LAYOUT);
+    const { ctx } = makeCtx();
+    const game = new Game(ctx, new Map(), createMemoryStorage());
+    expect(canvasOf(game)).toEqual({ width: 480, height: 660 });
+
+    game.handleCharSelectInput('Enter');
+    expect(canvasOf(game)).toEqual({ width: 480, height: 548 });
+
+    game.tick({ type: 'toggleInventory' });
+    expect(canvasOf(game)).toEqual({ width: 480, height: 660 });
+  });
+
+  it('keeps the run intact when the layout changes and the screen is redrawn', () => {
+    const game = startGame();
+    game.tick({ type: 'wait' });
+    const before = { turn: game.state.turn, depth: game.state.depth, pos: { ...game.state.player.position! } };
+
+    setLayout(COMPACT_LAYOUT);
+    game.redraw();
+
+    expect(canvasOf(game)).toEqual({ width: 480, height: 548 });
+    expect(game.state.turn).toBe(before.turn);
+    expect(game.state.depth).toBe(before.depth);
+    expect(game.state.player.position).toEqual(before.pos);
   });
 });

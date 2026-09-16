@@ -17,7 +17,7 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 - **Field of view** — Explore using recursive shadowcasting; what lurks in the dark?
 - **Permadeath** — One life per run. High scores are saved locally
 - **Save & resume** — Your run autosaves every turn; press C on the hero screen to pick up where you left off
-- **Touch controls** — Play on a phone or tablet with an on-screen d-pad and tappable menus
+- **Touch controls & phone layout** — Play on a phone or tablet with an on-screen d-pad and tappable menus; narrow screens get a 15×13 map and single-column menus
 - **Share your runs** — Post your results to Mastodon, Bluesky, or copy to clipboard
 
 ## How to Play
@@ -57,7 +57,7 @@ Abilities that find no target (Cleave with nothing adjacent, Arcane Bolt with no
 
 On touch devices an on-screen d-pad (with wait in the centre) and Grab, Bag, Skill, and Descend buttons appear under the map. Every other screen is tappable too: tap a hero card and then **START** on the hero screen (or the Continue banner to resume), tap an inventory row to use it or its `[drop]` label to drop it, tap the close mark or outside the panel to close the inventory, and tap the share options or "play again" on the game over screen.
 
-The canvas scales to fit the screen width. On a portrait phone the map is playable but the HUD text is small; a compact layout for narrow screens is planned.
+Below 600 pixels of width the game switches to a compact layout: the map shows 15×13 tiles with a reflowed HUD, and the hero, inventory, and game over screens use a taller single-column canvas. Rotating or resizing switches layouts without losing your run.
 
 ### Tips
 

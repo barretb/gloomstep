@@ -83,7 +83,7 @@ export interface CtxCall {
 /** A canvas-context stand-in that records every method call. */
 export function makeCtx(): { ctx: CanvasRenderingContext2D; calls: CtxCall[] } {
   const calls: CtxCall[] = [];
-  const target: Record<string, unknown> = {};
+  const target: Record<string, unknown> = { canvas: { width: 0, height: 0 } };
   const ctx = new Proxy(target, {
     get(t, prop: string) {
       if (prop in t) return t[prop];
