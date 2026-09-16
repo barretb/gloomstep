@@ -130,6 +130,13 @@ export interface GameState {
   turn: number;
   gameOver: boolean;
   won: boolean;
+  /** Seed the run started from; reproduces the run given the same actions. */
+  seed: number;
+  /** Current generator state; advances on every draw. */
+  rngState: number;
+  mode: 'normal' | 'daily';
+  /** YYYY-MM-DD (UTC) for daily runs. */
+  dailyDate?: string;
   messages: string[];
   uiMode: UIMode;
   highScores: number[];

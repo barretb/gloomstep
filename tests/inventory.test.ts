@@ -1,4 +1,5 @@
-import { afterEach, describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
+import { makeRng } from '../src/systems/rng';
 import { dropItem, pickupItem, useItem } from '../src/systems/inventory';
 import { createEntity } from '../src/ecs/entity';
 import { Entity } from '../src/types';
@@ -10,10 +11,6 @@ function makeLightningScroll(): Entity {
     item: { kind: 'scroll', useEffect: { type: 'damage', amount: 100, range: 5 } },
   });
 }
-
-afterEach(() => {
-  vi.restoreAllMocks();
-});
 
 describe('useItem', () => {
   it('levels the player up when a scroll kill crosses the XP threshold', () => {
@@ -28,11 +25,14 @@ describe('useItem', () => {
   });
 
   it('rolls a gold drop when a scroll kills a monster', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0);
     const player = makePlayer(1, 1);
     player.inventory!.items.push(makeLightningScroll());
     const monster = makeMonster(3, 1, {}, 6);
     const state = makeState(player, [monster]);
+    // Choose a generator state whose first draw lands under the 40% drop chance
+    let seed = 1;
+    while (makeRng(seed)() >= 0.4) seed++;
+    state.rngState = seed;
 
     useItem(state, 0);
 

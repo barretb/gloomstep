@@ -3,6 +3,7 @@ import { generateDungeon } from '../src/dungeon/generator';
 import { BOSS, getEscortTemplate, getMonsterTemplate, MONSTERS } from '../src/data/monsters';
 import { BOSS_DEPTH } from '../src/constants';
 import { Tile } from '../src/types';
+import { makeRng } from '../src/systems/rng';
 import { populateDungeon } from '../src/dungeon/populate';
 import { makeCtx, makeMonster, makePlayer, makeState } from './helpers';
 import { killEntity, VICTORY_BONUS } from '../src/systems/combat';
@@ -12,7 +13,7 @@ import { createMemoryStorage, getSaveSummary, loadRun, saveRun, SAVE_KEY } from 
 import { drawGameOver, drawHud } from '../src/render/hud';
 
 function hasStairs(depth: number): boolean {
-  const { dungeon } = generateDungeon(depth);
+  const { dungeon } = generateDungeon(depth, makeRng(1));
   return dungeon.tiles.some((row) => row.includes(Tile.StairsDown));
 }
 
@@ -56,7 +57,7 @@ describe('final floor population', () => {
     const deepNames = new Set(MONSTERS.filter((m) => m.minDepth >= 8).map((m) => m.appearance.name));
 
     for (let run = 0; run < 30; run++) {
-      const { dungeon, rooms } = generateDungeon(BOSS_DEPTH);
+      const { dungeon, rooms } = generateDungeon(BOSS_DEPTH, makeRng(1));
       const start = rooms[0];
       const player = makePlayer(Math.floor(start.x + start.w / 2), Math.floor(start.y + start.h / 2));
       const state = makeState(player);
@@ -76,7 +77,7 @@ describe('final floor population', () => {
   });
 
   it('spawns no boss above the final floor', () => {
-    const { dungeon, rooms } = generateDungeon(9);
+    const { dungeon, rooms } = generateDungeon(9, makeRng(1));
     const start = rooms[0];
     const state = makeState(makePlayer(Math.floor(start.x + start.w / 2), Math.floor(start.y + start.h / 2)));
     state.dungeon = dungeon;

@@ -1,5 +1,6 @@
 import { Action, GameState, Tile } from './types';
 import { BOSS_DEPTH } from './constants';
+import { makeRng, randomSeed, rngFor } from './systems/rng';
 import { createEntity, resetEntityIds, setNextEntityId } from './ecs/entity';
 import { generateDungeon } from './dungeon/generator';
 import { populateDungeon } from './dungeon/populate';
@@ -27,11 +28,20 @@ import { findHitRegion, HitRegion, TapAction } from './ui/hit-regions';
 import { canvasHeightFor, getLayout } from './render/layout';
 import { LOG_CAPACITY, logVisibleLines } from './render/log';
 
+export interface GameOptions {
+  /** Clock, injectable for tests. */
+  now?: () => Date;
+  /** Seed for free-play runs, injectable for tests. */
+  seedSource?: () => number;
+}
+
 export class Game {
   state!: GameState;
   ctx: CanvasRenderingContext2D;
   sprites: SpriteMap;
   storage: RunStorage;
+  now: () => Date;
+  seedSource: () => number;
   charSelectIndex = 0;
   shareStatus = '';
   resumeSummary: SaveSummary | null = null;
@@ -41,10 +51,17 @@ export class Game {
   /** Message log scroll position: lines back from the newest message. */
   logScroll = 0;
 
-  constructor(ctx: CanvasRenderingContext2D, sprites: SpriteMap, storage: RunStorage = defaultStorage()) {
+  constructor(
+    ctx: CanvasRenderingContext2D,
+    sprites: SpriteMap,
+    storage: RunStorage = defaultStorage(),
+    options: GameOptions = {}
+  ) {
     this.ctx = ctx;
     this.sprites = sprites;
     this.storage = storage;
+    this.now = options.now ?? (() => new Date());
+    this.seedSource = options.seedSource ?? randomSeed;
     this.showCharSelect();
   }
 
@@ -54,7 +71,7 @@ export class Game {
     this.confirmAbandon = false;
     // Create a minimal state for the charselect screen
     resetEntityIds();
-    const { dungeon, rooms } = generateDungeon(1);
+    const { dungeon, rooms } = generateDungeon(1, makeRng(1));
     const firstRoom = rooms[0];
     const player = createEntity({
       position: { x: Math.floor(firstRoom.x + firstRoom.w / 2), y: Math.floor(firstRoom.y + firstRoom.h / 2) },
@@ -75,6 +92,9 @@ export class Game {
       turn: 0,
       gameOver: false,
       won: false,
+      seed: 1,
+      rngState: 1,
+      mode: 'normal',
       messages: [],
       uiMode: 'charselect',
       highScores: loadHighScores(),
@@ -98,7 +118,7 @@ export class Game {
         this.drawCharSelectScreen();
         return;
       }
-      this.startGameWithCharacter(CHARACTERS[this.charSelectIndex]);
+      this.startRun(CHARACTERS[this.charSelectIndex], this.seedSource(), 'normal');
       return;
     }
 
@@ -141,18 +161,14 @@ export class Game {
     return true;
   }
 
-  private startGameWithCharacter(template: CharacterTemplate): void {
+  /** Starts a fresh run from `seed`. Public so tests can start identical runs. */
+  startRun(template: CharacterTemplate, seed: number, mode: 'normal' | 'daily', dailyDate?: string): void {
     clearRun(this.storage);
     resetEntityIds();
     const depth = 1;
-    const { dungeon, rooms } = generateDungeon(depth);
-
-    const firstRoom = rooms[0];
-    const startX = Math.floor(firstRoom.x + firstRoom.w / 2);
-    const startY = Math.floor(firstRoom.y + firstRoom.h / 2);
 
     const player = createEntity({
-      position: { x: startX, y: startY },
+      position: { x: 0, y: 0 },
       stats: { ...template.stats },
       appearance: {
         name: template.name,
@@ -168,8 +184,9 @@ export class Game {
       statusEffects: [],
     });
 
+    // Build the state first so the run's own generator drives generation and population.
     this.state = {
-      dungeon,
+      dungeon: { width: 0, height: 0, tiles: [], visible: [], explored: [] },
       entities: [player],
       player,
       depth,
@@ -178,9 +195,21 @@ export class Game {
       turn: 0,
       gameOver: false,
       won: false,
+      seed,
+      rngState: seed,
+      mode,
+      dailyDate,
       messages: [`${template.name} enters the dungeon...`],
       uiMode: 'game',
       highScores: loadHighScores(),
+    };
+
+    const { dungeon, rooms } = generateDungeon(depth, rngFor(this.state));
+    this.state.dungeon = dungeon;
+    const firstRoom = rooms[0];
+    player.position = {
+      x: Math.floor(firstRoom.x + firstRoom.w / 2),
+      y: Math.floor(firstRoom.y + firstRoom.h / 2),
     };
 
     populateDungeon(this.state, rooms);
@@ -324,7 +353,7 @@ export class Game {
     this.state.depth++;
     this.state.score += 50;
 
-    const { dungeon, rooms } = generateDungeon(this.state.depth);
+    const { dungeon, rooms } = generateDungeon(this.state.depth, rngFor(this.state));
     this.state.dungeon = dungeon;
 
     const firstRoom = rooms[0];

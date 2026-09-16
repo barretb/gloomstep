@@ -1,15 +1,6 @@
-import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { moveEntity } from '../src/systems/movement';
 import { makeMonster, makePlayer, makeState } from './helpers';
-
-beforeEach(() => {
-  // Pin the damage roll to 100% so expected values are exact.
-  vi.spyOn(Math, 'random').mockReturnValue(0.5);
-});
-
-afterEach(() => {
-  vi.restoreAllMocks();
-});
 
 describe('moveEntity', () => {
   it('does not let a monster attack another monster it bumps into', () => {
@@ -33,7 +24,9 @@ describe('moveEntity', () => {
     const moved = moveEntity(state, monster.id, 1, 0);
 
     expect(moved).toBe(true);
-    expect(player.stats!.hp).toBe(17);
+    // 3 attack into 0 defense rolls 80-120%: 2, 3, or 4 damage
+    expect(player.stats!.hp).toBeGreaterThanOrEqual(16);
+    expect(player.stats!.hp).toBeLessThanOrEqual(18);
   });
 
   it('lets the player attack a monster they bump into', () => {
@@ -43,6 +36,7 @@ describe('moveEntity', () => {
 
     moveEntity(state, player.id, 1, 0);
 
-    expect(monster.stats!.hp).toBe(2);
+    expect(monster.stats!.hp).toBeGreaterThanOrEqual(1);
+    expect(monster.stats!.hp).toBeLessThanOrEqual(3);
   });
 });

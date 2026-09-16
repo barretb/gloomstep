@@ -260,11 +260,11 @@ export const MONSTERS: MonsterTemplate[] = [
   },
 ];
 
-export function getMonsterTemplate(depth: number): MonsterTemplate {
+export function getMonsterTemplate(depth: number, rng: () => number = Math.random): MonsterTemplate {
   const available = MONSTERS.filter((m) => m.minDepth <= depth);
   // Weight toward harder monsters at deeper levels
   const weighted = available.flatMap((m) => Array(depthWeight(depth, m.minDepth)).fill(m));
-  return weighted[Math.floor(Math.random() * weighted.length)];
+  return weighted[Math.floor(rng() * weighted.length)];
 }
 
 /** The final-floor boss. Not part of the random pool; spawned once by populateDungeon. */
@@ -277,7 +277,7 @@ export const BOSS: MonsterTemplate = {
 };
 
 /** A uniformly chosen deep monster to guard the boss. */
-export function getEscortTemplate(): MonsterTemplate {
+export function getEscortTemplate(rng: () => number = Math.random): MonsterTemplate {
   const deep = MONSTERS.filter((m) => m.minDepth >= 8);
-  return deep[Math.floor(Math.random() * deep.length)];
+  return deep[Math.floor(rng() * deep.length)];
 }

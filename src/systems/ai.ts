@@ -1,9 +1,11 @@
 import { Entity, GameState } from '../types';
 import { moveEntity } from './movement';
 import { isHidden } from './abilities';
+import { rngFor } from './rng';
 
 export function runAI(state: GameState): void {
   const playerPos = state.player.position!;
+  const rng = rngFor(state);
 
   for (const entity of [...state.entities]) {
     if (!entity.ai || !entity.position || !entity.stats || entity.stats.hp <= 0) continue;
@@ -22,8 +24,8 @@ export function runAI(state: GameState): void {
       chasePlayer(state, entity, dx, dy);
     } else if (entity.ai.type === 'wander') {
       // Wander randomly (50% chance to move)
-      if (Math.random() < 0.5) {
-        wander(state, entity);
+      if (rng() < 0.5) {
+        wander(state, entity, rng);
       }
     }
     // chase-type monsters that can't see player just wait
@@ -54,13 +56,13 @@ function chasePlayer(state: GameState, entity: Entity, dx: number, dy: number): 
   }
 }
 
-function wander(state: GameState, entity: Entity): void {
+function wander(state: GameState, entity: Entity, rng: () => number): void {
   const dirs = [
     { dx: 0, dy: -1 },
     { dx: 0, dy: 1 },
     { dx: -1, dy: 0 },
     { dx: 1, dy: 0 },
   ];
-  const dir = dirs[Math.floor(Math.random() * dirs.length)];
+  const dir = dirs[Math.floor(rng() * dirs.length)];
   moveEntity(state, entity.id, dir.dx, dir.dy);
 }
