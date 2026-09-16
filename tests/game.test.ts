@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Game } from '../src/game';
+import { createMemoryStorage, getSaveSummary, RunStorage } from '../src/systems/persistence';
 import { makeCtx } from './helpers';
 
-function startGame(): Game {
+function startGame(storage: RunStorage = createMemoryStorage()): Game {
   const { ctx } = makeCtx();
-  const game = new Game(ctx, new Map());
+  const game = new Game(ctx, new Map(), storage);
   game.handleCharSelectInput('Enter');
   return game;
 }
@@ -59,5 +60,28 @@ describe('Game.tick', () => {
 
     expect(game.state.turn).toBe(0);
     expect(game.state.uiMode).toBe('inventory');
+  });
+});
+
+describe('Game autosave', () => {
+  it('saves the run after a turn', () => {
+    const storage = createMemoryStorage();
+    const game = startGame(storage);
+
+    game.tick({ type: 'wait' });
+
+    expect(getSaveSummary(storage)).toEqual({ name: 'Human Warrior', depth: 1, turn: 1 });
+  });
+
+  it('clears the save when the hero dies', () => {
+    const storage = createMemoryStorage();
+    const game = startGame(storage);
+    game.tick({ type: 'wait' });
+    game.state.player.stats!.hp = 0;
+
+    game.tick({ type: 'wait' });
+
+    expect(game.state.gameOver).toBe(true);
+    expect(getSaveSummary(storage)).toBeNull();
   });
 });

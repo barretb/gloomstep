@@ -9,6 +9,7 @@ import { pickupItem, useItem, dropItem } from './systems/inventory';
 import { createEmptyEquipment } from './systems/equipment';
 import { tickAbilities, useAbility } from './systems/abilities';
 import { loadHighScores, saveHighScore } from './systems/scoring';
+import { clearRun, defaultStorage, RunStorage, saveRun } from './systems/persistence';
 import { render } from './render/renderer';
 import { SpriteMap } from './render/sprite-loader';
 import { CHARACTERS, CharacterTemplate } from './data/characters';
@@ -18,12 +19,14 @@ export class Game {
   state!: GameState;
   ctx: CanvasRenderingContext2D;
   sprites: SpriteMap;
+  storage: RunStorage;
   charSelectIndex = 0;
   shareStatus = '';
 
-  constructor(ctx: CanvasRenderingContext2D, sprites: SpriteMap) {
+  constructor(ctx: CanvasRenderingContext2D, sprites: SpriteMap, storage: RunStorage = defaultStorage()) {
     this.ctx = ctx;
     this.sprites = sprites;
+    this.storage = storage;
     this.showCharSelect();
   }
 
@@ -87,6 +90,7 @@ export class Game {
   }
 
   private startGameWithCharacter(template: CharacterTemplate): void {
+    clearRun(this.storage);
     resetEntityIds();
     const depth = 1;
     const { dungeon, rooms } = generateDungeon(depth);
@@ -200,7 +204,8 @@ export class Game {
     tickAbilities(this.state);
     computeFOV(this.state);
 
-    if (this.state.player.stats!.hp <= 0 && !this.state.gameOver) {
+    const died = this.state.player.stats!.hp <= 0 && !this.state.gameOver;
+    if (died) {
       this.state.gameOver = true;
       this.state.uiMode = 'gameover';
       this.state.highScores = saveHighScore(this.state.score);
@@ -208,6 +213,12 @@ export class Game {
 
     if (this.state.messages.length > 50) {
       this.state.messages = this.state.messages.slice(-50);
+    }
+
+    if (died) {
+      clearRun(this.storage);
+    } else {
+      saveRun(this.state, this.storage);
     }
 
     this.draw();
@@ -236,6 +247,7 @@ export class Game {
 
     this.state.messages.push(`You descend to depth ${this.state.depth}...`);
     computeFOV(this.state);
+    saveRun(this.state, this.storage);
     this.draw();
   }
 
