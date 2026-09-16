@@ -168,3 +168,91 @@ describe('Game resume', () => {
     expect(fresh.id).toBeGreaterThan(maxSaved);
   });
 });
+
+describe('Game.handleTap', () => {
+  function centre(game: Game, predicate: (r: (typeof game.hitRegions)[number]) => boolean): [number, number] {
+    const region = game.hitRegions.find(predicate)!;
+    return [region.x + region.w / 2, region.y + region.h / 2];
+  }
+
+  it('selects the tapped hero card', () => {
+    const { ctx } = makeCtx();
+    const game = new Game(ctx, new Map(), createMemoryStorage());
+
+    game.handleTap(...centre(game, (r) => r.action.type === 'selectHero' && r.action.index === 7));
+
+    expect(game.charSelectIndex).toBe(7);
+    expect(game.state.uiMode).toBe('charselect');
+  });
+
+  it('runs the erase confirmation when START is tapped with a save present', () => {
+    const storage = createMemoryStorage();
+    const first = startGame(storage);
+    first.tick({ type: 'wait' });
+    const { ctx } = makeCtx();
+    const game = new Game(ctx, new Map(), storage);
+
+    game.handleTap(...centre(game, (r) => r.action.type === 'startHero'));
+    expect(game.confirmAbandon).toBe(true);
+    expect(game.state.uiMode).toBe('charselect');
+
+    game.handleTap(...centre(game, (r) => r.action.type === 'startHero'));
+    expect(game.state.uiMode).toBe('game');
+    expect(getSaveSummary(storage)).toBeNull();
+  });
+
+  it('uses and drops inventory items by tapping their row and drop label', () => {
+    const game = startGame();
+    const sword = createEntity({
+      appearance: { name: 'Short Sword', char: '/', color: '#ccc', sprite: 'sword-short' },
+      item: { kind: 'weapon', slot: 'weapon', attackBonus: 2 },
+    });
+    const potion = createEntity({
+      appearance: { name: 'Health Potion', char: '!', color: '#c33', sprite: 'potion-red' },
+      item: { kind: 'potion', useEffect: { type: 'heal', amount: 8 } },
+    });
+    game.state.player.inventory!.items.push(sword, potion);
+    game.tick({ type: 'toggleInventory' });
+
+    game.handleTap(...centre(game, (r) => r.action.type === 'useItem' && r.action.index === 0));
+    expect(game.state.player.equipment!.weapon).toBe(sword);
+    expect(game.state.uiMode).toBe('game');
+
+    game.tick({ type: 'toggleInventory' });
+    game.handleTap(...centre(game, (r) => r.action.type === 'dropItem' && r.action.index === 0));
+    expect(game.state.player.inventory!.items).toHaveLength(0);
+    expect(game.state.entities).toContain(potion);
+  });
+
+  it('closes the inventory without spending a turn when tapping outside the panel', () => {
+    const game = startGame();
+    game.tick({ type: 'toggleInventory' });
+    const turn = game.state.turn;
+
+    game.handleTap(2, 2);
+
+    expect(game.state.uiMode).toBe('game');
+    expect(game.state.turn).toBe(turn);
+  });
+
+  it('returns to the hero screen when play again is tapped on game over', () => {
+    const game = startGame();
+    game.state.player.stats!.hp = 0;
+    game.tick({ type: 'wait' });
+    expect(game.state.uiMode).toBe('gameover');
+
+    game.handleTap(...centre(game, (r) => r.action.type === 'playAgain'));
+
+    expect(game.state.uiMode).toBe('charselect');
+  });
+
+  it('ignores taps that hit nothing', () => {
+    const game = startGame();
+    const turn = game.state.turn;
+
+    game.handleTap(1, 1);
+
+    expect(game.state.uiMode).toBe('game');
+    expect(game.state.turn).toBe(turn);
+  });
+});
