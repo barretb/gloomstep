@@ -91,7 +91,7 @@ export function drawMessageLog(ctx: CanvasRenderingContext2D, state: GameState, 
       const text = msg.length > maxChars ? `${msg.slice(0, maxChars - 1)}…` : msg;
       // Newest lines are brightest
       const age = end - 1 - i;
-      const alpha = Math.max(0.45, 1 - age * 0.04);
+      const alpha = Math.max(0.75, 1 - age * 0.02);
       ctx.fillStyle = `rgba(200, 200, 200, ${alpha})`;
       ctx.fillText(text, textX, firstLineY + (i - start) * LINE_H);
     }
