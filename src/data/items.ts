@@ -214,6 +214,11 @@ export function getLootPool(depth: number): WeightedItem[] {
   return pool;
 }
 
+/** A specific template by display name, for scripted placements. */
+export function findItemTemplate(name: string): ItemTemplate | null {
+  return ITEMS.find((t) => t.appearance.name === name) ?? null;
+}
+
 export function getRandomItem(depth: number, rng: () => number = Math.random): ItemTemplate {
   const pool = getLootPool(depth);
   const total = pool.reduce((sum, e) => sum + e.weight, 0);

@@ -86,7 +86,7 @@ Below 600 pixels of width the game switches to a compact layout: the map shows 1
 - Levelling up grants +5 HP and +1 ATK every level, and +1 DEF every second level; deeper monsters have far more HP, so keep upgrading your weapon
 - Drop unwanted items with Shift+number to free up inventory space
 - Your class ability is often the difference in a tough fight; Rogues can Vanish to slip past a room, Scouts can Survey to find the stairs
-- The Overlord waits in the room farthest from where you arrive on depth 10, guarded by two deep-floor monsters. Buff up, bring potions, and open with your ability
+- The Overlord waits in the room farthest from where you arrive on depth 10, guarded by two deep-floor monsters. An Elixir of Vitality always lies beside you on arrival. Its health bar appears at the top of the map while it is in view; pull the escorts apart before you take it on
 - The daily challenge rolls over at midnight UTC. Its hero and dungeon come from the date, so compare scores with friends by sharing the result
 - Every run is driven by a seed, so the same seed and the same moves always play out the same way. The end screen shows the run code, and the share text links to it (`?run=<code>`), so a friend can attempt the exact same dungeon with the same hero
 - The game saves after every turn, so closing the tab is safe. Dying clears the save, and starting a new hero asks once before erasing it

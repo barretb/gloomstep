@@ -70,6 +70,7 @@ export function makeState(player: Entity, others: Entity[] = []): GameState {
     turn: 0,
     gameOver: false,
     won: false,
+    bossSeen: false,
     seed: 1,
     rngState: 1,
     mode: 'normal',

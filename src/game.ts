@@ -3,6 +3,7 @@ import { BOSS_DEPTH } from './constants';
 import { makeRng, randomSeed, rngFor } from './systems/rng';
 import { dailyDate, dailyHeroIndex, dailySeed, DailyResult, getDailyResult, recordDailyResult } from './systems/daily';
 import { formatRunCode, parseRunCode, RunCode } from './systems/runcode';
+import { checkBossSighting } from './systems/boss';
 import { createEntity, resetEntityIds, setNextEntityId } from './ecs/entity';
 import { generateDungeon } from './dungeon/generator';
 import { populateDungeon } from './dungeon/populate';
@@ -107,6 +108,7 @@ export class Game {
       turn: 0,
       gameOver: false,
       won: false,
+      bossSeen: false,
       seed: 1,
       rngState: 1,
       mode: 'normal',
@@ -229,6 +231,8 @@ export class Game {
     const name = state.player.appearance?.name ?? 'Adventurer';
     this.state.messages.push(`Welcome back, ${name}. Depth ${state.depth}, turn ${state.turn}.`);
     computeFOV(this.state);
+    // A boss already in view is announced before it gets to act
+    checkBossSighting(this.state);
     this.draw();
     return true;
   }
@@ -267,6 +271,7 @@ export class Game {
       turn: 0,
       gameOver: false,
       won: false,
+      bossSeen: false,
       seed,
       rngState: seed,
       mode,
@@ -287,6 +292,7 @@ export class Game {
 
     populateDungeon(this.state, rooms);
     computeFOV(this.state);
+    checkBossSighting(this.state);
     this.draw();
   }
 
@@ -386,6 +392,7 @@ export class Game {
     runAI(this.state);
     tickAbilities(this.state);
     computeFOV(this.state);
+    checkBossSighting(this.state);
 
     if (this.state.messages.length > LOG_CAPACITY) {
       this.state.messages = this.state.messages.slice(-LOG_CAPACITY);
@@ -450,6 +457,7 @@ export class Game {
 
     this.state.messages.push(`You descend to depth ${this.state.depth}...`);
     computeFOV(this.state);
+    checkBossSighting(this.state);
     saveRun(this.state, this.storage);
     this.draw();
   }
