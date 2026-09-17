@@ -73,6 +73,7 @@ export function makeState(player: Entity, others: Entity[] = []): GameState {
     seed: 1,
     rngState: 1,
     mode: 'normal',
+    heroIndex: 0,
     messages: [],
     uiMode: 'game',
     highScores: [],

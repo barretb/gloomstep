@@ -1,5 +1,6 @@
 import { GameState } from '../types';
 import { randomSeed } from './rng';
+import { CHARACTERS } from '../data/characters';
 
 export const SAVE_KEY = 'gloomstep-dungeon-save';
 export const SAVE_VERSION = 1;
@@ -78,6 +79,11 @@ export function loadRun(storage: RunStorage = defaultStorage()): GameState | nul
   state.uiMode = 'game';
   state.won = state.won ?? false;
   state.mode = state.mode ?? 'normal';
+  if (typeof state.heroIndex !== 'number') {
+    const sprite = state.player.appearance?.sprite;
+    const index = CHARACTERS.findIndex((c) => c.sprite === sprite);
+    state.heroIndex = index >= 0 ? index : 0;
+  }
   if (typeof state.seed !== 'number' || typeof state.rngState !== 'number') {
     state.seed = randomSeed();
     state.rngState = state.seed;

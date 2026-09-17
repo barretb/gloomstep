@@ -3,6 +3,7 @@ export type TapAction =
   | { type: 'startHero' }
   | { type: 'continueRun' }
   | { type: 'toggleDaily' }
+  | { type: 'enterRunCode' }
   | { type: 'useItem'; index: number }
   | { type: 'dropItem'; index: number }
   | { type: 'closeInventory' }

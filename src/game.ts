@@ -2,6 +2,7 @@ import { Action, GameState, Tile } from './types';
 import { BOSS_DEPTH } from './constants';
 import { makeRng, randomSeed, rngFor } from './systems/rng';
 import { dailyDate, dailyHeroIndex, dailySeed, DailyResult, getDailyResult, recordDailyResult } from './systems/daily';
+import { formatRunCode, parseRunCode, RunCode } from './systems/runcode';
 import { createEntity, resetEntityIds, setNextEntityId } from './ecs/entity';
 import { generateDungeon } from './dungeon/generator';
 import { populateDungeon } from './dungeon/populate';
@@ -54,6 +55,11 @@ export class Game {
   dailyMode = false;
   todaysDate = '';
   todaysResult: DailyResult | null = null;
+  /** A run code armed from a link or the prompt, waiting for Enter. */
+  sharedRun: (RunCode & { code: string }) | null = null;
+  sharedError = false;
+  /** Set by the page: asks the player for a run code (a browser prompt). */
+  onRequestRunCode: (() => void) | null = null;
 
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -74,6 +80,8 @@ export class Game {
     this.resumeSummary = getSaveSummary(this.storage);
     this.confirmAbandon = false;
     this.dailyMode = false;
+    this.sharedRun = null;
+    this.sharedError = false;
     this.todaysDate = dailyDate(this.now());
     this.todaysResult = getDailyResult(this.todaysDate, this.storage);
     // Create a minimal state for the charselect screen
@@ -102,6 +110,7 @@ export class Game {
       seed: 1,
       rngState: 1,
       mode: 'normal',
+      heroIndex: 0,
       messages: [],
       uiMode: 'charselect',
       highScores: loadHighScores(),
@@ -121,10 +130,17 @@ export class Game {
     if (key === 'd' || key === 'D') {
       this.dailyMode = !this.dailyMode;
       this.confirmAbandon = false;
+      this.sharedRun = null;
+      this.sharedError = false;
       if (this.dailyMode) {
         this.charSelectIndex = dailyHeroIndex(this.todaysDate);
       }
       this.drawCharSelectScreen();
+      return;
+    }
+
+    if (key === 'e' || key === 'E') {
+      this.onRequestRunCode?.();
       return;
     }
 
@@ -143,6 +159,8 @@ export class Game {
       if (this.dailyMode) {
         const hero = CHARACTERS[dailyHeroIndex(this.todaysDate)];
         this.startRun(hero, dailySeed(this.todaysDate), 'daily', this.todaysDate);
+      } else if (this.sharedRun) {
+        this.startRun(CHARACTERS[this.sharedRun.heroIndex], this.sharedRun.seed, 'shared');
       } else {
         this.startRun(CHARACTERS[this.charSelectIndex], this.seedSource(), 'normal');
       }
@@ -150,9 +168,10 @@ export class Game {
     }
 
     this.confirmAbandon = false;
+    this.sharedError = false;
 
-    // The daily's hero is fixed; arrows do nothing
-    if (this.dailyMode) {
+    // The daily's or a shared run's hero is fixed; arrows do nothing
+    if (this.dailyMode || this.sharedRun) {
       this.drawCharSelectScreen();
       return;
     }
@@ -178,6 +197,26 @@ export class Game {
     this.drawCharSelectScreen();
   }
 
+  /**
+   * Arms a shared run from a code (link parameter or prompt). Locks the hero
+   * and waits for Enter. Returns false, and shows an error, for a bad code.
+   */
+  armSharedRun(input: string): boolean {
+    const parsed = parseRunCode(input);
+    if (!parsed) {
+      this.sharedError = true;
+      this.drawCharSelectScreen();
+      return false;
+    }
+    this.sharedRun = { ...parsed, code: formatRunCode(parsed.seed, parsed.heroIndex) };
+    this.sharedError = false;
+    this.dailyMode = false;
+    this.confirmAbandon = false;
+    this.charSelectIndex = parsed.heroIndex;
+    this.drawCharSelectScreen();
+    return true;
+  }
+
   /** Loads the saved run. Returns false if there is none. */
   resumeRun(): boolean {
     const state = loadRun(this.storage);
@@ -195,7 +234,7 @@ export class Game {
   }
 
   /** Starts a fresh run from `seed`. Public so tests can start identical runs. */
-  startRun(template: CharacterTemplate, seed: number, mode: 'normal' | 'daily', dailyDate?: string): void {
+  startRun(template: CharacterTemplate, seed: number, mode: 'normal' | 'daily' | 'shared', dailyDate?: string): void {
     clearRun(this.storage);
     resetEntityIds();
     const depth = 1;
@@ -231,6 +270,7 @@ export class Game {
       seed,
       rngState: seed,
       mode,
+      heroIndex: Math.max(0, CHARACTERS.indexOf(template)),
       dailyDate,
       messages: [`${template.name} enters the dungeon...`],
       uiMode: 'game',
@@ -421,7 +461,7 @@ export class Game {
       date: this.todaysDate,
       heroIndex: dailyHeroIndex(this.todaysDate),
       result: this.todaysResult,
-    });
+    }, this.sharedRun ? { code: this.sharedRun.code, heroIndex: this.sharedRun.heroIndex } : null, this.sharedError);
   }
 
   /** Redraws whatever screen is active; used after the layout changes. */
@@ -475,6 +515,9 @@ export class Game {
         return;
       case 'toggleDaily':
         this.handleCharSelectInput('d');
+        return;
+      case 'enterRunCode':
+        this.onRequestRunCode?.();
         return;
       case 'useItem':
         this.tick({ type: 'useItem', index: action.index });
@@ -583,13 +626,15 @@ export class Game {
         : `\u2694\uFE0F Gloomstep Dungeon \u2694\uFE0F`;
     const challenge = s.won ? 'I slew the Overlord. Can you?' : 'Can you survive the dungeon?';
     const tags = daily ? '#GloomstepDungeon #GloomstepDaily #roguelike' : '#GloomstepDungeon #roguelike';
+    // Free-play and shared runs link straight to the same run; the daily is identified by its date.
+    const link = daily ? GAME_URL : `${GAME_URL}/?run=${formatRunCode(s.seed, s.heroIndex)}`;
     return [
       title,
       `Score: ${s.score} | Depth: ${s.depth} | Level: ${stats.level}`,
       `Turns Survived: ${s.turn}`,
       `Character: ${name}`,
       challenge,
-      GAME_URL,
+      link,
       tags,
     ].join('\n');
   }

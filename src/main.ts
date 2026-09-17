@@ -67,6 +67,23 @@ loadSprites().then((sprites) => {
 
   syncBar();
 
+  // Run codes: typed via the browser prompt, or carried on the link that opened the page
+  game.onRequestRunCode = () => {
+    const code = window.prompt('Enter a run code (for example 1z8k3f-7):');
+    if (code !== null) {
+      game.armSharedRun(code);
+      syncBar();
+    }
+  };
+  const pageUrl = new URL(window.location.href);
+  const runParam = pageUrl.searchParams.get('run');
+  if (runParam) {
+    game.armSharedRun(runParam);
+    // Drop the parameter so a refresh does not re-arm the shared run
+    pageUrl.searchParams.delete('run');
+    window.history.replaceState(null, '', pageUrl.toString());
+  }
+
   // Switch layouts when the window crosses the compact breakpoint (rotation, resize)
   window.addEventListener('resize', () => {
     const next = computeLayout(container.clientWidth);
