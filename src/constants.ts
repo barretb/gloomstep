@@ -21,7 +21,7 @@ export const COLORS = {
   xpBar: '#33cc33',
   text: '#cccccc',
   textBright: '#ffffff',
-  textDim: '#666666',
+  textDim: '#8888a0',
   inventoryBg: 'rgba(10, 10, 26, 0.92)',
-  inventoryBorder: '#4a4a6a',
+  inventoryBorder: '#6a6a90',
 } as const;

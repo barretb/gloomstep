@@ -49,6 +49,11 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
   ctx.font = '12px monospace';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
+  // Outlined so the label stays readable over both the filled and empty part of the bar
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 3;
+  ctx.lineJoin = 'round';
+  ctx.strokeText(`HP: ${stats.hp}/${stats.maxHp}`, barX + 4, barY + barH / 2);
   ctx.fillText(`HP: ${stats.hp}/${stats.maxHp}`, barX + 4, barY + barH / 2);
 
   // XP bar
@@ -63,7 +68,9 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
   ctx.strokeRect(barX, xpBarY, barW, barH);
 
   ctx.fillStyle = COLORS.textBright;
+  ctx.strokeText(`XP: ${stats.xp}/${stats.xpToNext}`, barX + 4, xpBarY + barH / 2);
   ctx.fillText(`XP: ${stats.xp}/${stats.xpToNext}`, barX + 4, xpBarY + barH / 2);
+  ctx.lineWidth = 1;
 
   // Stats text: two rows of three columns to the right of the bars
   const statsX = barX + barW + 20;
@@ -114,7 +121,7 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
   const recentMessages = state.messages.slice(-L.maxMessages);
   ctx.font = '11px monospace';
   recentMessages.forEach((msg, i) => {
-    const alpha = 0.5 + 0.5 * ((i + 1) / recentMessages.length);
+    const alpha = 0.75 + 0.25 * ((i + 1) / recentMessages.length);
     ctx.fillStyle = `rgba(200, 200, 200, ${alpha})`;
     ctx.fillText(msg, msgX, msgY + i * lineH);
   });

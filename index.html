@@ -28,28 +28,45 @@
         letter-spacing: 4px;
       }
       canvas {
-        border: 2px solid #4a4a6a;
+        border: 2px solid #6a6a90;
         image-rendering: pixelated;
         max-width: 100%;
         height: auto;
       }
+      canvas:focus-visible {
+        outline: 3px solid #ffcc00;
+        outline-offset: 2px;
+      }
       .controls {
-        color: #666;
+        color: #9a9ab0;
         font-size: 11px;
         text-align: center;
       }
       .links {
-        color: #4a4a6a;
+        color: #7a7a9a;
         font-size: 11px;
         text-align: center;
       }
       .links a {
-        color: #6a6aaa;
+        color: #9a9ad8;
         text-decoration: none;
       }
-      .links a:hover {
-        color: #9999cc;
+      .links a:hover,
+      .links a:focus-visible {
+        color: #c0c0f0;
         text-decoration: underline;
+        outline-color: #ffcc00;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
       #touch-controls {
         display: none;
@@ -69,12 +86,16 @@
         font: bold 18px monospace;
         color: #ffcc00;
         background: #1a1a2e;
-        border: 2px solid #4a4a6a;
+        border: 2px solid #6a6a90;
         border-radius: 8px;
         touch-action: manipulation;
       }
       #touch-controls button:active {
         background: #4a4a6a;
+      }
+      #touch-controls button:focus-visible {
+        outline: 3px solid #ffcc00;
+        outline-offset: 2px;
       }
       #touch-controls .dpad {
         display: grid;
@@ -106,10 +127,11 @@
     </style>
   </head>
   <body>
-    <div id="game-container">
+    <main id="game-container">
       <h1>GLOOMSTEP DUNGEON</h1>
-      <canvas id="game"></canvas>
-      <div id="touch-controls" hidden>
+      <canvas id="game" tabindex="0" role="img" aria-label="Gloomstep Dungeon is loading"></canvas>
+      <div id="announcer" class="sr-only" aria-live="polite"></div>
+      <div id="touch-controls" role="toolbar" aria-label="Game controls" hidden>
         <div class="dpad">
           <button data-action="move:0,-1" aria-label="Move up">&#9650;</button>
           <button data-action="move:-1,0" aria-label="Move left">&#9664;</button>
@@ -133,7 +155,7 @@
         &nbsp;|&nbsp;
         <a href="https://github.com/barretb/gloomstep" target="_blank" rel="noopener">GitHub</a>
       </div>
-    </div>
+    </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

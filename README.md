@@ -24,6 +24,12 @@ Descend through procedurally generated dungeons, fight monsters, collect loot, a
 - **Touch controls & phone layout** — Play on a phone or tablet with an on-screen d-pad and tappable menus; narrow screens get a 15×13 map and single-column menus
 - **Share your runs** — Post your results to Mastodon, Bluesky, or copy to clipboard
 
+## Accessibility
+
+- Every action has a key, and the canvas takes keyboard focus on load with a visible focus ring; the touch buttons are focusable too.
+- The canvas exposes a one-line summary of the current screen (hero, depth, HP, turn, ability) as its accessible name, and new game messages are announced through a polite live region, so screen readers can follow a run.
+- Text and UI colours meet WCAG 2.1 AA contrast on the dark backgrounds. The one deliberate exception is wall tiles against floor tiles: they are game art with a brick texture as a second cue, and field-of-view dimming is intentional.
+
 ## How to Play
 
 ### Controls
