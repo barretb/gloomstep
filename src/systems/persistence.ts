@@ -78,6 +78,7 @@ export function loadRun(storage: RunStorage = defaultStorage()): GameState | nul
   state.player = state.entities.find((e) => e.player)!;
   state.uiMode = 'game';
   state.won = state.won ?? false;
+  state.bossSeen = state.bossSeen ?? false;
   state.mode = state.mode ?? 'normal';
   if (typeof state.heroIndex !== 'number') {
     const sprite = state.player.appearance?.sprite;

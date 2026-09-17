@@ -1,7 +1,7 @@
 import { Entity, GameState, Room, Tile } from '../types';
 import { createEntity } from '../ecs/entity';
 import { BOSS, getEscortTemplate, getMonsterTemplate, MonsterTemplate } from '../data/monsters';
-import { getRandomItem } from '../data/items';
+import { findItemTemplate, getRandomItem } from '../data/items';
 import { BOSS_DEPTH } from '../constants';
 import { rngFor } from '../systems/rng';
 
@@ -93,6 +93,21 @@ function spawnBoss(state: GameState, rooms: Room[]): void {
   }
 }
 
+/** One Elixir of Vitality beside the player on arrival at the final floor. */
+function placeLastSupply(state: GameState, startRoom: Room): void {
+  const elixir = findItemTemplate('Elixir of Vitality');
+  if (!elixir) return;
+  const pos = freeTilesInRoom(state, startRoom)[0];
+  if (!pos) return;
+  state.entities.push(
+    createEntity({
+      position: { x: pos.x, y: pos.y },
+      appearance: { ...elixir.appearance },
+      item: { ...elixir.item },
+    })
+  );
+}
+
 export function populateDungeon(state: GameState, rooms: Room[]): void {
   const depth = state.depth;
   const rng = rngFor(state);
@@ -103,6 +118,7 @@ export function populateDungeon(state: GameState, rooms: Room[]): void {
   // The final floor holds the Overlord; place it first so its room is still empty
   if (depth === BOSS_DEPTH) {
     spawnBoss(state, rooms);
+    placeLastSupply(state, rooms[0]);
   }
 
   // Skip first room (player spawn)

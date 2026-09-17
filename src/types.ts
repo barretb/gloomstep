@@ -130,6 +130,8 @@ export interface GameState {
   turn: number;
   gameOver: boolean;
   won: boolean;
+  /** The Overlord has been sighted this run (drives the one-time announcement). */
+  bossSeen: boolean;
   /** Seed the run started from; reproduces the run given the same actions. */
   seed: number;
   /** Current generator state; advances on every draw. */

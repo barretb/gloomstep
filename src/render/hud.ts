@@ -7,6 +7,7 @@ import { ABILITIES } from '../data/abilities';
 import { SaveSummary } from '../systems/persistence';
 import { DailyResult } from '../systems/daily';
 import { formatRunCode } from '../systems/runcode';
+import { findVisibleBoss } from '../systems/boss';
 import { HitRegion } from '../ui/hit-regions';
 import { canvasHeightFor, getLayout } from './layout';
 
@@ -112,6 +113,34 @@ export function drawHud(ctx: CanvasRenderingContext2D, state: GameState): void {
       const prefixW = ctx.measureText(`[Q] ${def.name}: ${status}  `).width;
       ctx.fillText(effects.join('  '), abilityPos.x + prefixW, abilityPos.y);
     }
+  }
+
+  // Boss health bar, over the top of the map while the Overlord is in view
+  const boss = findVisibleBoss(state);
+  if (boss && boss.stats) {
+    const bw = Math.min(240, L.mapW - 40);
+    const bx = Math.floor((L.mapW - bw) / 2);
+    const by = 8;
+    const bh = 16;
+    ctx.fillStyle = COLORS.hpBarBg;
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.fillStyle = COLORS.hpBar;
+    ctx.fillRect(bx, by, Math.max(0, bw * (boss.stats.hp / boss.stats.maxHp)), bh);
+    ctx.strokeStyle = '#ffcc00';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx, by, bw, bh);
+    ctx.fillStyle = COLORS.textBright;
+    ctx.font = 'bold 12px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'round';
+    const label = `${boss.appearance?.name ?? 'Boss'} ${boss.stats.hp}/${boss.stats.maxHp}`;
+    ctx.strokeText(label, bx + bw / 2, by + bh / 2);
+    ctx.fillText(label, bx + bw / 2, by + bh / 2);
+    ctx.lineWidth = 1;
+    ctx.textAlign = 'left';
   }
 
   // Message log
